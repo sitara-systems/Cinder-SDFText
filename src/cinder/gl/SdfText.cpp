@@ -1545,8 +1545,8 @@ SdfText::SdfText( const SdfText::Font &font, const Format &format, const std::st
 				FT_GlyphSlot slot = face->glyph;
 				SdfText::Font::GlyphMetrics glyphMetrics;
 				glyphMetrics.advance = vec2( slot->linearHoriAdvance, slot->linearVertAdvance ) / 65536.0f;
-				glyphMetrics.minimum = vec2( slot->metrics.horiBearingX, slot->metrics.vertBearingY - slot->metrics.height ) / 65536.0f;
-				glyphMetrics.maximum = vec2( slot->metrics.horiBearingX + slot->metrics.width, slot->metrics.vertBearingY ) / 65536.0f;
+				glyphMetrics.minimum = vec2( slot->metrics.horiBearingX, slot->metrics.vertBearingY - slot->metrics.height ) / 64.0f;
+				glyphMetrics.maximum = vec2( slot->metrics.horiBearingX + slot->metrics.width, slot->metrics.vertBearingY ) / 64.0f;
 				mGlyphMetrics[glyphIndex] = glyphMetrics;
 			}
 		}
