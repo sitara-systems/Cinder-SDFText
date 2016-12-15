@@ -897,7 +897,7 @@ SdfText::TextureAtlasRef SdfTextManager::getTextureAtlas( FT_Face face, const Sd
 
 	// Build the maps and information pieces that will be needed later
 	vec2 maxGlyphSize = vec2( 0 );
-	for( const auto& ch : utf32Chars ) {
+	for( /* const auto& ch : utf32Chars */ uint32_t ch = 32; ch < 65535; ++ch ) {
 		FT_UInt glyphIndex = FT_Get_Char_Index( face, static_cast<FT_ULong>( ch ) );
 		// Glyph bounds, 
 		msdfgen::Shape shape;
@@ -1515,8 +1515,8 @@ SdfText::SdfText( const SdfText::Font &font, const Format &format, const std::st
 
 		// Build char/glyph maps
 		std::vector<SdfText::Font::Glyph> glyphIndices;
-		for( const auto &ch : utf32Chars ) {
-			// Lookup glyph index based on char
+        for( /* const auto &ch : utf32Chars */ uint32_t ch = 32; ch < 65535; ++ch ) {
+            // Lookup glyph index based on char
 			SdfText::Font::Glyph glyphIndex = static_cast<SdfText::Font::Glyph>( FT_Get_Char_Index( face, static_cast<FT_ULong>( ch ) ) );
 
 			// Unique glyph
