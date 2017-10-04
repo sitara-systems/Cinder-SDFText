@@ -506,7 +506,7 @@ class SdfTextBox {
 public:
 	enum { GROW = 0 };
 	
-	SdfTextBox( const SdfText *sdfText ) : mSdfText( sdfText ), mAlign( SdfText::LEFT ), mSize( GROW, GROW ), mInvalid( true ), mLigate( true ) {}
+	SdfTextBox( const SdfText *sdfText ) : mSdfText( sdfText ), mAlign( SdfText::LEFT ), mSize( GROW, GROW ), mTracking( 0 ), mInvalid( true ), mLigate( true ) {}
 
 	SdfTextBox&				size( ivec2 sz ) { setSize( sz ); return *this; }
 	SdfTextBox&				size( int width, int height ) { setSize( ivec2( width, height ) ); return *this; }
@@ -517,6 +517,10 @@ public:
 	const std::string&		getText() const { return mText; }
 	void					setText( const std::string &t ) { mText = t; mInvalid = true; }
 	void					appendText( const std::string &t ) { mText += t; mInvalid = true; }
+
+	SdfTextBox&				tracking( float tracking ) { setTracking( tracking ); return *this; }
+	float					getTracking() const { return mTracking; }
+	void					setTracking( float t ) { mTracking = t; }
 
 	SdfTextBox&				ligate( bool ligateText = true ) { setLigate( ligateText ); return *this; }
 	bool					getLigate() const { return mLigate; }
@@ -534,6 +538,7 @@ private:
 	SdfText::Alignment	mAlign;
 	ivec2				mSize;
 	std::string			mText;
+	float				mTracking;
 	bool				mLigate;
 	mutable bool		mInvalid;
 };
@@ -1253,7 +1258,7 @@ SdfText::Font::GlyphMeasuresList SdfTextBox::measureGlyphs( const SdfText::DrawO
 				continue;
 			}
 
-			advance = glyphMetricIt->second.advance;
+			advance = glyphMetricIt->second.advance + mTracking;
 			adjust = advance - glyphMetricIt->second.maximum;
 
 			glyphCount++;
@@ -2249,21 +2254,21 @@ void SdfText::drawGlyphs( const SdfText::Font::GlyphMeasuresList &glyphMeasures,
 
 void SdfText::drawString( const std::string &str, const vec2 &baseline, const DrawOptions &options )
 {
-	SdfTextBox tbox = SdfTextBox( this ).text( str ).size( SdfTextBox::GROW, SdfTextBox::GROW ).ligate( options.getLigate() );
+	SdfTextBox tbox = SdfTextBox( this ).text( str ).size( SdfTextBox::GROW, SdfTextBox::GROW ).ligate( options.getLigate() ).tracking( options.getTracking() );
 	SdfText::Font::GlyphMeasuresList glyphMeasures = tbox.measureGlyphs( options );
 	drawGlyphs( glyphMeasures, baseline, options );
 }
 
 void SdfText::drawString( const std::string &str, const Rectf &fitRect, const vec2 &offset, const DrawOptions &options )
 {
-	SdfTextBox tbox = SdfTextBox( this ).text( str ).size( SdfTextBox::GROW, (int)fitRect.getHeight() ).ligate( options.getLigate() );
+	SdfTextBox tbox = SdfTextBox( this ).text( str ).size( SdfTextBox::GROW, (int)fitRect.getHeight() ).ligate( options.getLigate() ).tracking( options.getTracking() );
 	SdfText::Font::GlyphMeasuresList glyphMeasures = tbox.measureGlyphs( options );
 	drawGlyphs( glyphMeasures, fitRect, fitRect.getUpperLeft() + offset, options );	
 }
 
 void SdfText::drawStringWrapped( const std::string &str, const Rectf &fitRect, const vec2 &offset, const DrawOptions &options )
 {
-	SdfTextBox tbox = SdfTextBox( this ).text( str ).size( (int)fitRect.getWidth(), (int)fitRect.getHeight() ).ligate( options.getLigate() );
+	SdfTextBox tbox = SdfTextBox( this ).text( str ).size( (int)fitRect.getWidth(), (int)fitRect.getHeight() ).ligate( options.getLigate() ).tracking( options.getTracking() );
 	SdfText::Font::GlyphMeasuresList glyphMeasures = tbox.measureGlyphs( options );
 	drawGlyphs( glyphMeasures, fitRect.getUpperLeft() + offset, options );
 }
@@ -2341,7 +2346,7 @@ std::vector<std::pair<uint8_t, std::vector<SdfText::CharPlacement>>> SdfText::pl
 
 std::vector<std::pair<uint8_t, std::vector<SdfText::CharPlacement>>> SdfText::placeString( const std::string &str, const vec2 &baseline, const DrawOptions &options )
 {
-	SdfTextBox tbox = SdfTextBox( this ).text( str ).size( SdfTextBox::GROW, SdfTextBox::GROW ).ligate( options.getLigate() );
+	SdfTextBox tbox = SdfTextBox( this ).text( str ).size( SdfTextBox::GROW, SdfTextBox::GROW ).ligate( options.getLigate() ).tracking( options.getTracking() );
 	SdfText::Font::GlyphMeasuresList glyphMeasures = tbox.measureGlyphs( options );
 	std::vector<std::pair<uint8_t, std::vector<SdfText::CharPlacement>>> result = placeChars( glyphMeasures, baseline, options );
 	return result;
@@ -2349,7 +2354,7 @@ std::vector<std::pair<uint8_t, std::vector<SdfText::CharPlacement>>> SdfText::pl
 
 std::vector<std::pair<uint8_t, std::vector<SdfText::CharPlacement>>> SdfText::placeStringWrapped( const std::string &str, const Rectf &fitRect, const vec2 &offset, const DrawOptions &options )
 {
-	SdfTextBox tbox = SdfTextBox( this ).text( str ).size( (int)fitRect.getWidth(), (int)fitRect.getHeight() ).ligate( options.getLigate() );
+	SdfTextBox tbox = SdfTextBox( this ).text( str ).size( (int)fitRect.getWidth(), (int)fitRect.getHeight() ).ligate( options.getLigate() ).tracking( options.getTracking() );
 	SdfText::Font::GlyphMeasuresList glyphMeasures = tbox.measureGlyphs( options );
 	std::vector<std::pair<uint8_t, std::vector<SdfText::CharPlacement>>> result = placeChars( glyphMeasures, fitRect.getUpperLeft() + offset, options );
 	return result;
@@ -2357,8 +2362,8 @@ std::vector<std::pair<uint8_t, std::vector<SdfText::CharPlacement>>> SdfText::pl
 
 Rectf SdfText::measureStringImpl( const std::string &str, bool wrapped, const Rectf &fitRect, const DrawOptions &options ) const
 {
-	SdfTextBox tbox = wrapped ? SdfTextBox( this ).text( str ).size( (int)fitRect.getWidth(), (int)fitRect.getHeight() ).ligate( options.getLigate() )
-                              : SdfTextBox( this ).text( str ).size( SdfTextBox::GROW, SdfTextBox::GROW ).ligate( options.getLigate() );
+	SdfTextBox tbox = wrapped ? SdfTextBox( this ).text( str ).size( (int)fitRect.getWidth(), (int)fitRect.getHeight() ).ligate( options.getLigate() ).tracking( options.getTracking() )
+                              : SdfTextBox( this ).text( str ).size( SdfTextBox::GROW, SdfTextBox::GROW ).ligate( options.getLigate() ).tracking( options.getTracking() );
 	
     SdfText::Font::GlyphMeasuresList glyphMeasures = tbox.measureGlyphs( options );
 
@@ -2506,19 +2511,19 @@ vec2 SdfText::measureStringWrapped( const std::string &str, const Rectf &fitRect
 
 std::vector<std::pair<SdfText::Font::Glyph, vec2>> SdfText::getGlyphPlacements( const std::string &str, const DrawOptions &options ) const
 {
-	SdfTextBox tbox = SdfTextBox( this ).text( str ).size( SdfTextBox::GROW, SdfTextBox::GROW ).ligate( options.getLigate() );
+	SdfTextBox tbox = SdfTextBox( this ).text( str ).size( SdfTextBox::GROW, SdfTextBox::GROW ).ligate( options.getLigate() ).tracking( options.getTracking() );
 	return tbox.measureGlyphs(  options );
 }
 
 std::vector<std::pair<SdfText::Font::Glyph, vec2>> SdfText::getGlyphPlacements( const std::string &str, const Rectf &fitRect, const DrawOptions &options ) const
 {
-	SdfTextBox tbox = SdfTextBox( this ).text( str ).size( SdfTextBox::GROW, (int)fitRect.getHeight() ).ligate( options.getLigate() );
+	SdfTextBox tbox = SdfTextBox( this ).text( str ).size( SdfTextBox::GROW, (int)fitRect.getHeight() ).ligate( options.getLigate() ).tracking( options.getTracking() );
 	return tbox.measureGlyphs( options );
 }
 
 std::vector<std::pair<SdfText::Font::Glyph, vec2>> SdfText::getGlyphPlacementsWrapped( const std::string &str, const Rectf &fitRect, const DrawOptions &options ) const
 {
-	SdfTextBox tbox = SdfTextBox( this ).text( str ).size( (int)fitRect.getWidth(), (int)fitRect.getHeight() ).ligate( options.getLigate() );
+	SdfTextBox tbox = SdfTextBox( this ).text( str ).size( (int)fitRect.getWidth(), (int)fitRect.getHeight() ).ligate( options.getLigate() ).tracking( options.getTracking() );
 	return tbox.measureGlyphs( options );
 }
 

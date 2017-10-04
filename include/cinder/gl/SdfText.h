@@ -119,6 +119,11 @@ public:
 		//! Sets whether the output glyphs are snapped to pixel boundaries. This sharpens static text but prevents subpixel animation
 		DrawOptions&	pixelSnap( bool pixelSnap = true ) { mPixelSnap = pixelSnap; return *this; }
 
+		//! Returns the tracking value, affecting spacing between individual characters. Default to \c zero.
+		float			getTracking() const { return mTracking; }
+		//! Sets the tracking value, affecting spacing between individual characters. Default to \c zero.
+		DrawOptions&	tracking( float tracking ) { mTracking = tracking; return *this; }
+
 		//! Returns whether advanced ligatures are used, which must have been instantiated by the \a supportedChars parameter of the TextureFont::create() call. Default to \c false.
 		bool			getLigate() const { return mLigate; }
 		//! Sets whether advanced ligatures are used, which must have been instantiated by the \a supportedChars parameter of the TextureFont::create() call. Default to \c false.
@@ -163,6 +168,7 @@ public:
 		bool			mClipHorizontal, mClipVertical, mPixelSnap, mLigate;
 		float			mScale = 2.0;
 		float			mLeading = 0.0f;
+		float			mTracking = 0.0f;
 		bool			mPremultiply = false;
 		bool			mJustify = false;
 		float			mGamma = 2.2f;
