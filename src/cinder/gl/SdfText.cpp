@@ -1258,7 +1258,7 @@ SdfText::Font::GlyphMeasuresList SdfTextBox::measureGlyphs( const SdfText::DrawO
 				continue;
 			}
 
-			advance = glyphMetricIt->second.advance + mTracking;
+			advance = glyphMetricIt->second.advance + ( mTracking * 0.001f * font.getSize() ); // See: https://graphicdesign.stackexchange.com/a/61079 
 			adjust = advance - glyphMetricIt->second.maximum;
 
 			glyphCount++;
