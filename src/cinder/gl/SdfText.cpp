@@ -1204,9 +1204,9 @@ SdfText::Font::GlyphMeasuresList SdfTextBox::measureGlyphs( const SdfText::DrawO
 	const float ascent        = font.getAscent();
 	const float descent       = font.getDescent();
 	const float leading       = drawOptions.getLeading();
-	const float drawScale	  = drawOptions.getScale();
+	const float drawScale     = drawOptions.getScale();
 	const auto  align         = drawOptions.getAlignment();
-	const float lineHeight    = fontSizeScale * drawScale * ( ascent + descent + leading );
+	const float lineHeight    = ( leading != leading ) ? drawScale * 1.20f * font.getSize() : drawScale * leading; // Leading will be NaN if not defined.
 
 	// Calculate the line breaks
 	std::vector<std::string> mLines = calculateLineBreaks();
@@ -1258,7 +1258,7 @@ SdfText::Font::GlyphMeasuresList SdfTextBox::measureGlyphs( const SdfText::DrawO
 				continue;
 			}
 
-			advance = glyphMetricIt->second.advance + ( mTracking * 0.001f * font.getSize() ); // See: https://graphicdesign.stackexchange.com/a/61079 
+			advance = glyphMetricIt->second.advance + ( mTracking * font.getSize() ) / 1000.0f; // See: https://graphicdesign.stackexchange.com/a/61079 
 			adjust = advance - glyphMetricIt->second.maximum;
 
 			glyphCount++;
@@ -1293,30 +1293,28 @@ SdfText::Font::GlyphMeasuresList SdfTextBox::measureGlyphs( const SdfText::DrawO
 			}
 		}
 
-		if( ! aligned ){
+		if( ! aligned ) {
 			switch( align ) {
-				case SdfText::LEFT:
-				break;
-				case SdfText::CENTER: {
-					float offset = ( mSize.x - ( pen.x + advance.x - adjust.x ) ) * 0.5f;
-					if( offset > 0.0f ) {
-						for( size_t i = index; i < result.size(); ++i )
-							result[i].second.x += offset;
-					}
-				}
-				break;
-				case SdfText::RIGHT: {
-					float offset = ( mSize.x - ( pen.x + advance.x - adjust.x ) );
-					if( offset > 0.0f ) {
-						for( size_t i = index; i < result.size(); ++i )
-							result[i].second.x += offset;
-					}
-				}
-				break;
+			case SdfText::LEFT:
+			break;
+			case SdfText::CENTER: {
+				float width = pen.x;
+				float offset = ( mSize.x - width ) * 0.5f;
+				for( size_t i = index; i < result.size(); ++i )
+					result[i].second.x += offset;
+			}
+			break;
+			case SdfText::RIGHT: {
+				float width = pen.x;
+				float offset = mSize.x - width;
+				for( size_t i = index; i < result.size(); ++i )
+					result[i].second.x += offset;
+			}
+			break;
 			}
 		}
 
-		curY += lineHeight; 
+		curY += lineHeight;
 	}
 
 	return result;

@@ -134,9 +134,9 @@ public:
 		//! Sets the scale at which the type is rendered. 2 is double size. Default \c 1
 		DrawOptions&	scale( float sc ) { mScale = sc; return *this; }
 
-		//! Returns the leading (aka line gap) used adjust the line height when wrapping. Default \c 0
+		//! Returns the leading (aka line gap) used adjust the line height when wrapping. Default \c "Auto"
 		float			getLeading() const { return mLeading; }
-		//! Sets the leading (aka line gap) used adjust the line height when wrapping. Default \c 0
+		//! Sets the leading (aka line gap) used adjust the line height when wrapping. Default \c "Auto"
 		DrawOptions&	leading( float value ) { mLeading = value; return *this; }
 
 		//! Returns the horizontal alignment (LEFT, CENTER, RIGHT) of the type. Default \c LEFT
@@ -167,7 +167,7 @@ public:
 	  protected:
 		bool			mClipHorizontal, mClipVertical, mPixelSnap, mLigate;
 		float			mScale = 2.0;
-		float			mLeading = 0.0f;
+		float			mLeading = std::numeric_limits<float>::signaling_NaN();
 		float			mTracking = 0.0f;
 		bool			mPremultiply = false;
 		bool			mJustify = false;
