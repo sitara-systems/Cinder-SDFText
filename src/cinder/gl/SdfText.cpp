@@ -902,7 +902,7 @@ SdfText::TextureAtlasRef SdfTextManager::getTextureAtlas( FT_Face face, const Sd
 
 	// Build the maps and information pieces that will be needed later
 	vec2 maxGlyphSize = vec2( 0 );
-	for( /* const auto& ch : utf32Chars */ uint32_t ch = 32; ch < 65535; ++ch ) {
+	for( const auto& ch : utf32Chars ) {
 		FT_UInt glyphIndex = FT_Get_Char_Index( face, static_cast<FT_ULong>( ch ) );
 		// Glyph bounds, 
 		msdfgen::Shape shape;
@@ -1518,7 +1518,7 @@ SdfText::SdfText( const SdfText::Font &font, const Format &format, const std::st
 
 		// Build char/glyph maps
 		std::vector<SdfText::Font::Glyph> glyphIndices;
-        for( /* const auto &ch : utf32Chars */ uint32_t ch = 32; ch < 65535; ++ch ) {
+        for( const auto &ch : utf32Chars ) {
             // Lookup glyph index based on char
 			SdfText::Font::Glyph glyphIndex = static_cast<SdfText::Font::Glyph>( FT_Get_Char_Index( face, static_cast<FT_ULong>( ch ) ) );
 
@@ -2526,8 +2526,26 @@ std::vector<std::pair<SdfText::Font::Glyph, vec2>> SdfText::getGlyphPlacementsWr
 }
 
 std::string SdfText::defaultChars()
-{ 
-	return "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz1234567890().?!,:;'\"&*=+-/\\|@#_[]<>%^llflfiphrids\303\251\303\241\303\250\303\240"; 
+{
+    static std::string defaultChars;
+
+    if( defaultChars.empty() ) {
+        std::u16string latin( 600, 0 );
+
+        int i = 0;
+        for( int c = 0x0020; c <= 0x007F; ++i, ++c )
+            latin[i] = c;
+        for( int c = 0x00A0; c <= 0x00FF; ++i, ++c )
+            latin[i] = c;
+        for( int c = 0x0100; c <= 0x017F; ++i, ++c )
+            latin[i] = c;
+        for( int c = 0x0180; c <= 0x024F; ++i, ++c )
+            latin[i] = c;
+
+        defaultChars = toUtf8( latin );
+    }
+
+    return defaultChars;
 }
 
 uint32_t SdfText::getNumTextures() const
