@@ -220,10 +220,10 @@ public:
 		const std::string&		getName() const { return mName; }
 		std::string				getFullName() const { return mName; }
 
-		float					getHeight() const { return mHeight; }
-		float					getLeading() const { return mLeading; }
-		float					getAscent() const { return mAscent; }
-		float					getDescent() const { return mDescent; }
+		float					getHeight() const { return mHeight * mFontScale; }
+		float					getLeading() const { return mLeading * mFontScale; }
+		float					getAscent() const { return mAscent * mFontScale; }
+		float					getDescent() const { return mDescent * mFontScale; }
 
 		size_t					getNumGlyphs() const { return mNumGlyphs; }
 		Glyph					getGlyphIndex( size_t idx ) const;
@@ -242,6 +242,7 @@ public:
 		float					mLeading = 0;
 		float					mAscent = 0;
 		float					mDescent = 0;
+        float                   mFontScale = 1;
 		size_t					mNumGlyphs = 0;
 
 		uint32_t				mUnitsPerEm = 0;
@@ -315,6 +316,10 @@ public:
 	float					getAscent() const { return mFont.getAscent(); }
 	//! Returns the descent of the font
 	float					getDescent() const { return mFont.getDescent(); }
+    //! Returns the height of the font
+    float					getHeight() const { return mFont.getHeight(); }
+    //! Returns the leading of the font
+    float					getLeading() const { return mFont.getLeading(); }
 
 	//! Returns the default set of characters for a TextureFont, suitable for most English text, including some common ligatures and accented vowels.
 	//! \c "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz1234567890().?!,:;'\"&*=+-/\\|@#_[]<>%^llflfiphridséáèà"

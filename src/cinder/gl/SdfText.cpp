@@ -1792,9 +1792,9 @@ SdfTextRef SdfText::load( const ci::DataSourceRef& source, float size )
 	is->readLittle( &(font.mDescent) );
 
 	// Override font size if it's requested
-	float fontSizeScale = 1.0f;
+	font.mFontScale = 1.0f;
 	if( size > 0.0f ) {
-		fontSizeScale = size / font.mSize;
+		font.mFontScale = size / font.mSize;
 		font.mSize = size;
 	}
 
@@ -1849,9 +1849,9 @@ SdfTextRef SdfText::load( const ci::DataSourceRef& source, float size )
 			is->readLittle( &( metrics.minimum.y ) );
 			is->readLittle( &( metrics.maximum.x ) );
 			is->readLittle( &( metrics.maximum.y ) );
-			metrics.advance *= fontSizeScale;
-			metrics.minimum *= fontSizeScale;
-			metrics.maximum *= fontSizeScale;
+			metrics.advance *= font.mFontScale;
+			metrics.minimum *= font.mFontScale;
+			metrics.maximum *= font.mFontScale;
 			sdfText->mGlyphMetrics[glyph] = metrics;
 		}
 	}
