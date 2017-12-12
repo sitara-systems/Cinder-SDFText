@@ -220,10 +220,11 @@ public:
 		const std::string&		getName() const { return mName; }
 		std::string				getFullName() const { return mName; }
 
-		float					getHeight() const { return mHeight * mFontScale; }
-		float					getLeading() const { return mLeading * mFontScale; }
-		float					getAscent() const { return mAscent * mFontScale; }
-		float					getDescent() const { return mDescent * mFontScale; }
+		float					getHeight() const { return mHeight; }
+		float					getLeading() const { return mLeading; }
+		float					getAscent() const { return mAscent; }
+		float					getDescent() const { return mDescent; }
+        float                   getFontScale() const { return mFontScale; }
 
 		size_t					getNumGlyphs() const { return mNumGlyphs; }
 		Glyph					getGlyphIndex( size_t idx ) const;
