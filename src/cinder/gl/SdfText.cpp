@@ -2013,7 +2013,7 @@ void SdfText::drawGlyphs( const SdfText::Font::GlyphMeasuresList &glyphMeasures,
 			float ty = std::fabs( originOffset.y ) + sdfPadding.y;
 			offset += scale * sdfScale * vec2( -tx, ty );
 			// Use origin scale for horizontal offset
-			offset += scale * fontOriginScale * vec2( originOffset.x, 0.0f );
+			offset += scale * fontOriginScale * vec2( glm::max( originOffset.x, 0.0f ), 0.0f );
 			destRect += offset;
 			destRect.scale( fontRenderScale );
 
@@ -2156,7 +2156,7 @@ void SdfText::drawGlyphs( const SdfText::Font::GlyphMeasuresList &glyphMeasures,
 			destRect += vec2( offset.x, offset.y );
 			vec2 originOffset = fontOriginScale * glyphInfo.mOriginOffset;
 			destRect += vec2( floor( originOffset.x + 0.5f ), floor( -originOffset.y ) ) * scale;
-			destRect += fontRenderScale * vec2( -sdfPadding.x, -sdfPadding.y );
+            destRect += fontRenderScale * vec2( -sdfPadding.x, -sdfPadding.y );
 			if( options.getPixelSnap() ) {
 				destRect -= vec2( destRect.x1 - floor( destRect.x1 ), destRect.y1 - floor( destRect.y1 ) );	
 			}
@@ -2320,8 +2320,8 @@ std::vector<std::pair<uint8_t, std::vector<SdfText::CharPlacement>>> SdfText::pl
 			float ty = std::fabs( originOffset.y ) + sdfPadding.y;
 			offset += scale * sdfScale * vec2( -tx, ty );
 			// Use origin scale for horizontal offset
-			offset += scale * fontOriginScale * vec2( originOffset.x, 0.0f );
-			destRect += offset;
+            offset += scale * fontOriginScale * vec2( glm::max( originOffset.x, 0.0f ), 0.0f );
+            destRect += offset;
 			destRect.scale( fontRenderScale );
 
 			destRect += glyphIt->second * scale;
@@ -2392,7 +2392,7 @@ Rectf SdfText::measureStringImpl( const std::string &str, bool wrapped, const Re
         float ty = std::fabs( originOffset.y ) + sdfPadding.y;
         offset += scale * sdfScale * vec2( -tx, ty );
         // Use origin scale for horizontal offset
-        offset += scale * fontOriginScale * vec2( originOffset.x, 0.0f );
+        offset += scale * fontOriginScale * vec2( glm::max( originOffset.x, 0.0f ), 0.0f );
         destRect += offset;
         destRect.scale( fontRenderScale );
 
@@ -2457,7 +2457,7 @@ Rectf SdfText::measureStringBounds( const std::string &str, const DrawOptions &o
         float ty = std::fabs( originOffset.y ) + sdfPadding.y;
         offset += scale * sdfScale * vec2( -tx, ty );
         // Use origin scale for horizontal offset
-        offset += scale * fontOriginScale * vec2( originOffset.x, 0.0f );
+        offset += scale * fontOriginScale * vec2( glm::max( originOffset.x, 0.0f ), 0.0f );
         destRect += offset;
         destRect.scale( fontRenderScale );
 
