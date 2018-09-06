@@ -499,7 +499,6 @@ private:
 	friend bool SdfTextFontManager_destroyStaticInstance();
 };
 
-
 // =================================================================================================
 // SdfTexttManager Implementation
 // =================================================================================================
@@ -1233,7 +1232,10 @@ SdfText::Font::GlyphMeasuresList SdfTextBox::measureGlyphs( const SdfText::DrawO
 		// Apply alignment as a post-process.
 		bool aligned = false;
 		if( drawOptions.getJustify() ) {
-			const bool isLastLine = nextUtf32Chars.empty();
+			bool isLastLine = nextUtf32Chars.empty();
+			if ( mLastLineJustify ) {
+				isLastLine = false;
+			}
 			if( spaceCount > 0 && !isLastLine ) {
 				float space = ( mSize.x - ( pen.x + advance.x - adjust.x ) );
 				float offset = 0.0f;

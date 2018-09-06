@@ -358,7 +358,7 @@ class SdfTextBox {
 public:
 	enum { GROW = 0 };
 
-	SdfTextBox( const SdfText *sdfText ) : mSdfText( sdfText ), mAlign( SdfText::LEFT ), mSize( GROW, GROW ), mTracking( 0 ), mInvalid( true ), mLigate( true ) {}
+	SdfTextBox( const SdfText *sdfText ) : mSdfText( sdfText ), mAlign( SdfText::LEFT ), mSize( GROW, GROW ), mTracking( 0 ), mLastLineJustify( false ), mInvalid( true ), mLigate( true ) {}
 
 	SdfTextBox&				size( ivec2 sz ) { setSize( sz ); return *this; }
 	SdfTextBox&				size( int width, int height ) { setSize( ivec2( width, height ) ); return *this; }
@@ -382,6 +382,10 @@ public:
 	SdfText::Alignment		getAlignment() const { return mAlign; }
 	void					setAlignment( SdfText::Alignment align ) { mAlign = align; mInvalid = true; }
 
+	SdfTextBox&				lastLineJustify( bool lastLineJustify = false ) { setJustify( lastLineJustify ); return *this; }
+	bool					getLastLineJustify() const { return mLastLineJustify; mInvalid = true; }
+	void					setJustify( bool lastLineJustify ) { mLastLineJustify = lastLineJustify; }
+
 	std::vector<std::string>			calculateLineBreaks() const;
 	SdfText::Font::GlyphMeasuresList	measureGlyphs( const SdfText::DrawOptions& drawOptions ) const;
 
@@ -392,6 +396,7 @@ private:
 	std::string			mText;
 	float				mTracking;
 	bool				mLigate;
+	bool                mLastLineJustify;
 	mutable bool		mInvalid;
 };
 }} // namespace cinder::gl
