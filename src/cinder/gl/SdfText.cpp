@@ -43,6 +43,7 @@ POSSIBILITY OF SUCH DAMAGE.
 #include "cinder/Text.h"
 #include "cinder/Unicode.h"
 #include "cinder/Utilities.h"
+#include "cinder/Log.h"
 
 #include "cinder/app/App.h"
 
@@ -1170,6 +1171,14 @@ SdfText::Font::GlyphMeasuresList SdfTextBox::measureGlyphs( const SdfText::DrawO
 		return result;
 	}
 
+	// Get rid of the last space in each line
+	//for ( auto &line : mLines ) {
+	//	if ( line.back() == ' ' ) {
+	//		line.pop_back();
+	//	}
+	//}
+
+
 	// Build measures
 	const auto& charToGlyph = mSdfText->getCharToGlyph();
 	const auto& glyphMetrics = mSdfText->getGlyphMetrics();
@@ -1237,12 +1246,14 @@ SdfText::Font::GlyphMeasuresList SdfTextBox::measureGlyphs( const SdfText::DrawO
 				isLastLine = false;
 			}
 			if( spaceCount > 0 && !isLastLine ) {
-				float space = ( mSize.x - ( pen.x + advance.x - adjust.x ) );
+				float space = ( mSize.x - ( pen.x - adjust.x ) );
 				float offset = 0.0f;
+
 				for( size_t i = index; i < result.size(); ++i ) {
 					result[i].second.x += offset;
 					// 75% of the extra spacing comes from adjusting every character.
-					offset += ( 0.75f * space ) / glyphCount;
+					offset += ( 0.75f * space ) / ( glyphCount );
+
 					if( result[i].first == spaceIndex ) {
 						// 25% of the extra spacing comes from adjusting white space characters only.
 						offset += ( 0.25f * space ) / spaceCount;
