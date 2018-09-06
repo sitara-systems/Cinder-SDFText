@@ -1235,7 +1235,7 @@ SdfText::Font::GlyphMeasuresList SdfTextBox::measureGlyphs( const SdfText::DrawO
 			if ( mLastLineJustify ) {
 				isLastLine = false;
 			}
-			if( spaceCount > 0 && !isLastLine ) {
+			if( spaceCount > mJustifySpaceCount && !isLastLine ) {
 				float space = ( mSize.x - ( pen.x - adjust.x ) );
 				float offset = 0.0f;
 
