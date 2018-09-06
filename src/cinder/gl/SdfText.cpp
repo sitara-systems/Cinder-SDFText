@@ -43,7 +43,6 @@ POSSIBILITY OF SUCH DAMAGE.
 #include "cinder/Text.h"
 #include "cinder/Unicode.h"
 #include "cinder/Utilities.h"
-#include "cinder/Log.h"
 
 #include "cinder/app/App.h"
 
@@ -305,7 +304,6 @@ SdfText::TextureAtlas::TextureAtlas( FT_Face face, const SdfText::Format &format
 			// Max ascent, descent
 			mMaxAscent = std::max( mMaxAscent, static_cast<float>( t ) );
 			mMaxDescent = std::max( mMaxAscent, static_cast<float>( std::fabs( b ) ) );
-			//CI_LOG_I( (char)ch << " : " << mGlyphInfo[glyphIndex].mOriginOffset );
 		}	
 	}
 
@@ -1170,14 +1168,6 @@ SdfText::Font::GlyphMeasuresList SdfTextBox::measureGlyphs( const SdfText::DrawO
 	if( mLines.empty() ) {
 		return result;
 	}
-
-	// Get rid of the last space in each line
-	//for ( auto &line : mLines ) {
-	//	if ( line.back() == ' ' ) {
-	//		line.pop_back();
-	//	}
-	//}
-
 
 	// Build measures
 	const auto& charToGlyph = mSdfText->getCharToGlyph();
