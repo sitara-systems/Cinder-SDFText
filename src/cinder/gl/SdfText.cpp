@@ -1228,10 +1228,19 @@ SdfText::Font::GlyphMeasuresList SdfTextBox::measureGlyphs( const SdfText::DrawO
 			pen += advance;
 		}
 
+		// Do not justify if line breaks ahead
+		bool lineBreakDetected = false;
+		for ( size_t k = 0; k < lineIt->length(); k++ ) {
+			if ( lineIt->at( k ) == '\n' ) {
+				lineBreakDetected = true;
+			}
+		}
+
 		// Apply alignment as a post-process.
 		bool aligned = false;
-		if( drawOptions.getJustify() ) {
+		if( drawOptions.getJustify() && !lineBreakDetected ) {
 			bool isLastLine = nextUtf32Chars.empty();
+
 			if ( mLastLineJustify ) {
 				isLastLine = false;
 			}
