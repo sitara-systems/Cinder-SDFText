@@ -199,8 +199,7 @@ void MeshPagesApp::draw()
 
 }
 
-void prepareSettings( App::Settings *settings )
-{
+void prepareSettings( App::Settings *settings ) {
 	settings->setWindowSize( 1024, 1024 + kPageBorder );
 }
 

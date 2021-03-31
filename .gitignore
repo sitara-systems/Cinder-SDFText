@@ -18,5 +18,5 @@ ipch/
 project.xcworkspace/
 xcuserdata/
 
-# cahed sdf 
+# cached sdf 
 *.sdft

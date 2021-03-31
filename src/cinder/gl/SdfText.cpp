@@ -733,7 +733,7 @@ void SdfTextManager::acquireFontNamesAndPaths()
 			//boost::trim( fontName );
 			cinder::sdftext::trim(fontName);
 			//std::string fontKey = boost::to_lower_copy( fontName );
-			std::string fontKey;
+			std::string fontKey = fontName;
 			std::transform(fontName.begin(), fontName.end(), fontKey.begin(),
 				[](unsigned char c) { return std::tolower(c); });
 
@@ -975,7 +975,7 @@ SdfTextManager::FontInfo SdfTextManager::getFontInfo( const std::string& fontNam
 	boost::trim(lcfn);
 	*/
 
-	std::string lcfn;
+	std::string lcfn = fontName;
 	std::transform(fontName.begin(), fontName.end(), lcfn.begin(),
 		[](unsigned char c) { return std::tolower(c); });
 	// need boost::trim here

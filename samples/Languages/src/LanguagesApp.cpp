@@ -51,7 +51,9 @@ void LanguagesApp::setup()
 	mTextInfos.push_back( TextInfo( "Malgun Gothic", "한국어", 42.0f, vec2( 10,  50 + 3*50 ) ) );
 	mTextInfos.push_back( TextInfo( "Calibri", "Tiếng Việt", 42.0f, vec2( 10,  50 + 4*50 ) ) );
 	mTextInfos.push_back( TextInfo( "Leelawadee", "ไทย", 42.0f, vec2( 10,  50 + 5*50 ) ) );
-	mTextInfos.push_back( TextInfo( "Impact", "ελληνικά", 42.0f, vec2( 10,  50 + 6*50 ) ) );
+	mTextInfos.push_back(TextInfo("Impact", "ελληνικά", 42.0f, vec2(10, 50 + 6 * 50)));
+	mTextInfos.push_back(TextInfo("Calibri", "الأبجدية", 42.0f, vec2(10, 50 + 7 * 50)));
+	mTextInfos.push_back(TextInfo("Nirmala", "देवनागरी", 42.0f, vec2(10, 50 + 8 * 50)));
 #endif
 
 	generateSdf();

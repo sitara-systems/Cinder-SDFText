@@ -2,8 +2,25 @@
 Based on [msdfgen](https://github.com/Chlumsky/msdfgen) by Viktor Chlumský.
 
 ## Building for Windows
-1. Build lib first in ```vc2013``` or ```vc2015```
-1. Build samples in ```samples```
+Clone `cinder` in an adjacent folder.  E.g.:
+
+```
+myProject/
+    dependencies/
+        cinder/
+        cinder-sdftext/
+    code/
+        myProjectSolution/
+```
+
+1. Add `cinder.projx` and `cinder-sdftext.projx` to your Visual Studio Solution.
+2. Add `config/cinder-sdftext-production.props` to your Visual Studio Solution.
+3. Build.
+4. Enjoy!
+
+See how the examples are built.  They use the property sheet `cinder-sdftext-example` to get the paths right, but otherwise are the same.
+
+As of 2021 March 31, only the Debug x64 builds of all samples are correctly set up; the Release builds have not been updated.
 
 ## Building for OSX and iOS
 1. Build lib first in ```xcode```
