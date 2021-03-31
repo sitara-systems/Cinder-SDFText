@@ -67,7 +67,8 @@ POSSIBILITY OF SUCH DAMAGE.
 #include <cmath>
 #include <set>
 #include <vector>
-#include <boost/algorithm/string.hpp>
+#include <algorithm>
+#include <regex>
 
 #if defined( CINDER_LINUX )
 	#include <fontconfig/fontconfig.h>
@@ -76,6 +77,48 @@ POSSIBILITY OF SUCH DAMAGE.
 #endif
 
 static const float MAX_SIZE = 1000000.0f;
+
+namespace cinder {
+	namespace sdftext {
+		// trim from start (in place)
+		void ltrim(std::string& s) {
+			s.erase(s.begin(), std::find_if(s.begin(), s.end(), [](unsigned char ch) {
+				return !std::isspace(ch);
+				}));
+		}
+
+		// trim from end (in place)
+		void rtrim(std::string& s) {
+			s.erase(std::find_if(s.rbegin(), s.rend(), [](unsigned char ch) {
+				return !std::isspace(ch);
+				}).base(), s.end());
+		}
+
+		// trim from both ends (in place)
+		void trim(std::string& s) {
+			ltrim(s);
+			rtrim(s);
+		}
+
+		// trim from start (copying)
+		std::string ltrim_copy(std::string s) {
+			ltrim(s);
+			return s;
+		}
+
+		// trim from end (copying)
+		std::string rtrim_copy(std::string s) {
+			rtrim(s);
+			return s;
+		}
+
+		// trim from both ends (copying)
+		std::string trim_copy(std::string s) {
+			trim(s);
+			return s;
+		}
+	}
+}
 
 namespace cinder { namespace gl {
 
@@ -299,11 +342,11 @@ SdfText::TextureAtlas::TextureAtlas( FT_Face face, const SdfText::Format &format
 			mGlyphInfo[glyphIndex].mOriginOffset = vec2( l, b );
 			mGlyphInfo[glyphIndex].mSize = vec2( r - l, t - b );
 			// Max glyph size
-			mMaxGlyphSize.x = std::max( mMaxGlyphSize.x, bounds.getWidth() );
-			mMaxGlyphSize.y = std::max( mMaxGlyphSize.y, bounds.getHeight() );
+			mMaxGlyphSize.x = std::max<float>( mMaxGlyphSize.x, bounds.getWidth() );
+			mMaxGlyphSize.y = std::max<float>( mMaxGlyphSize.y, bounds.getHeight() );
 			// Max ascent, descent
-			mMaxAscent = std::max( mMaxAscent, static_cast<float>( t ) );
-			mMaxDescent = std::max( mMaxAscent, static_cast<float>( std::fabs( b ) ) );
+			mMaxAscent = std::max<float>( mMaxAscent, static_cast<float>( t ) );
+			mMaxDescent = std::max<float>(mMaxAscent, static_cast<float>(std::fabs(b)));
 		}	
 	}
 
@@ -685,9 +728,15 @@ void SdfTextManager::acquireFontNamesAndPaths()
 		std::string fontFilePath = ci::toUtf8( reinterpret_cast<const char16_t *>( wsFontFilePath.c_str() ), wsFontFilePath.length() * sizeof( char16_t ) );
 		// Process True Type font
 		if( std::string::npos != fontName.find( kTrueTypeTag ) ) {
-			boost::replace_all( fontName, kTrueTypeTag, "" );
-			boost::trim( fontName );
-			std::string fontKey = boost::to_lower_copy( fontName );
+			//boost::replace_all( fontName, kTrueTypeTag, "" );
+			std::regex_replace(fontName, std::regex(kTrueTypeTag), "");
+			//boost::trim( fontName );
+			cinder::sdftext::trim(fontName);
+			//std::string fontKey = boost::to_lower_copy( fontName );
+			std::string fontKey;
+			std::transform(fontName.begin(), fontName.end(), fontKey.begin(),
+				[](unsigned char c) { return std::tolower(c); });
+
 			auto it = std::find_if( std::begin( mFontInfos ), std::end( mFontInfos ),
 				[fontKey]( const FontInfo& elem ) -> bool {
 					return elem.key == fontKey;
@@ -872,8 +921,8 @@ SdfText::TextureAtlasRef SdfTextManager::getTextureAtlas( FT_Face face, const Sd
 				static_cast<float>( r ), 
 				static_cast<float>( t ) );
 			// Max glyph size
-			maxGlyphSize.x = std::max( maxGlyphSize.x, bounds.getWidth() );
-			maxGlyphSize.y = std::max( maxGlyphSize.y, bounds.getHeight() );
+			maxGlyphSize.x = std::max<float>( maxGlyphSize.x, bounds.getWidth() );
+			maxGlyphSize.y = std::max<float>( maxGlyphSize.y, bounds.getHeight() );
 		}	
 	}
 	
@@ -921,8 +970,15 @@ SdfTextManager::FontInfo SdfTextManager::getFontInfo( const std::string& fontNam
 #elif defined( CINDER_LINUX )	
 #endif
 
-	std::string lcfn = boost::to_lower_copy( fontName );
-	boost::trim( lcfn );
+	/*
+	std::string lcfn = boost::to_lower_copy(fontName);
+	boost::trim(lcfn);
+	*/
+
+	std::string lcfn;
+	std::transform(fontName.begin(), fontName.end(), lcfn.begin(),
+		[](unsigned char c) { return std::tolower(c); });
+	// need boost::trim here
 
 	auto it = std::find_if( std::begin( mFontInfos ), std::end( mFontInfos ),
 		[lcfn]( const SdfTextManager::FontInfo &elem ) -> bool {
@@ -948,7 +1004,7 @@ SdfTextManager::FontInfo SdfTextManager::getFontInfo( const std::string& fontNam
 				std::vector<std::string> keyTokens = ci::split( fontInfos.key, ' ' );
 				float keyScore = ( keyTokens.size() == tokens.size() ) ? 0.25f : 0.0f;
 				float hitScore = static_cast<float>( hits ) / static_cast<float>( fontInfos.key.length() - ( keyTokens.size() - 1 ) );
-				hitScore = 0.75f * std::min( hitScore, 1.0f );
+				hitScore = 0.75f * std::min<float>( hitScore, 1.0f );
 				float totalScore = keyScore + hitScore;
 				if( totalScore > highScore ) {
 					highScore = totalScore;
@@ -1178,14 +1234,16 @@ SdfText::Font::GlyphMeasuresList SdfTextBox::measureGlyphs( const SdfText::DrawO
 	for( std::vector<std::string>::const_iterator lineIt = mLines.begin(); lineIt != mLines.end(); ++lineIt ) {
 		// Fetch current line and prefetch next. This way we can look ahead.
 		if( nextUtf32Chars.empty() ) {
-			utf32Chars = ci::toUtf32( boost::algorithm::trim_right_copy( *lineIt ) );
+			//utf32Chars = ci::toUtf32( boost::algorithm::trim_right_copy( *lineIt ) );
+			utf32Chars = ci::toUtf32(cinder::sdftext::rtrim_copy(*lineIt));
 		}
 		else {
 			std::swap( utf32Chars, nextUtf32Chars );
 		}
 
 		if( ( lineIt + 1 ) != mLines.end() ) {
-			nextUtf32Chars = ci::toUtf32( boost::algorithm::trim_right_copy( *( lineIt + 1 ) ) );
+			//nextUtf32Chars = ci::toUtf32(boost::algorithm::trim_right_copy(*(lineIt + 1)));
+			nextUtf32Chars = ci::toUtf32(cinder::sdftext::rtrim_copy(*(lineIt + 1)));
 		}
 		else {
 			nextUtf32Chars.clear();
@@ -1982,7 +2040,7 @@ void SdfText::drawGlyphs( const SdfText::Font::GlyphMeasuresList &glyphMeasures,
 			float ty = std::fabs( originOffset.y ) + sdfPadding.y;
 			offset += scale * sdfScale * vec2( -tx, ty );
 			// Use origin scale for horizontal offset
-			offset += scale * fontOriginScale * vec2( glm::max( originOffset.x, 0.0f ), 0.0f );
+			offset += scale * fontOriginScale * vec2( std::max<float>( originOffset.x, 0.0f ), 0.0f );
 			destRect += offset;
 			destRect.scale( fontRenderScale );
 
@@ -2133,12 +2191,12 @@ void SdfText::drawGlyphs( const SdfText::Font::GlyphMeasuresList &glyphMeasures,
 			// clip
 			Rectf clipped( destRect );
 			if( options.getClipHorizontal() ) {
-				clipped.x1 = std::max( destRect.x1, clip.x1 );
-				clipped.x2 = std::min( destRect.x2, clip.x2 );
+				clipped.x1 = std::max<float>( destRect.x1, clip.x1 );
+				clipped.x2 = std::min<float>( destRect.x2, clip.x2 );
 			}
 			if( options.getClipVertical() ) {
-				clipped.y1 = std::max( destRect.y1, clip.y1 );
-				clipped.y2 = std::min( destRect.y2, clip.y2 );
+				clipped.y1 = std::max<float>( destRect.y1, clip.y1 );
+				clipped.y2 = std::min<float>( destRect.y2, clip.y2 );
 			}
 			
 			if( clipped.x1 >= clipped.x2 || clipped.y1 >= clipped.y2 ) {
@@ -2289,7 +2347,7 @@ std::vector<std::pair<uint8_t, std::vector<SdfText::CharPlacement>>> SdfText::pl
 			float ty = std::fabs( originOffset.y ) + sdfPadding.y;
 			offset += scale * sdfScale * vec2( -tx, ty );
 			// Use origin scale for horizontal offset
-            offset += scale * fontOriginScale * vec2( glm::max( originOffset.x, 0.0f ), 0.0f );
+            offset += scale * fontOriginScale * vec2( std::max<float>( originOffset.x, 0.0f ), 0.0f );
             destRect += offset;
 			destRect.scale( fontRenderScale );
 
@@ -2361,7 +2419,7 @@ Rectf SdfText::measureStringImpl( const std::string &str, bool wrapped, const Re
         float ty = std::fabs( originOffset.y ) + sdfPadding.y;
         offset += scale * sdfScale * vec2( -tx, ty );
         // Use origin scale for horizontal offset
-        offset += scale * fontOriginScale * vec2( glm::max( originOffset.x, 0.0f ), 0.0f );
+        offset += scale * fontOriginScale * vec2( std::max<float>( originOffset.x, 0.0f ), 0.0f );
         destRect += offset;
         destRect.scale( fontRenderScale );
 
@@ -2377,10 +2435,10 @@ Rectf SdfText::measureStringImpl( const std::string &str, bool wrapped, const Re
 		destRect.y2 += ( 0.5f * fontOriginScale.y );
 
 		if( ( result.getWidth() > 0 ) || ( result.getHeight() > 0 ) ) {
-			result.x1 = std::min( result.x1, destRect.x1 );
-			result.y1 = std::min( result.y1, destRect.y1 );
-			result.x2 = std::max( result.x2, destRect.x2 );
-			result.y2 = std::max( result.y2, destRect.y2 );
+			result.x1 = std::min<float>( result.x1, destRect.x1 );
+			result.y1 = std::min<float>( result.y1, destRect.y1 );
+			result.x2 = std::max<float>( result.x2, destRect.x2 );
+			result.y2 = std::max<float>( result.y2, destRect.y2 );
 		}
 		else {
 			result = destRect;
