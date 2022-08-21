@@ -42,8 +42,7 @@ private:
 	void generateSdf();
 };
 
-void LanguagesApp::setup()
-{
+void LanguagesApp::setup() {
 #if defined( CINDER_MSW )
 	mTextInfos.push_back( TextInfo( "Arial", "English", 42.0f, vec2( 10,  50 + 0*50 ) ) );
 	mTextInfos.push_back( TextInfo( "Meiryo", "日本語", 42.0f, vec2( 10,  50 + 1*50 ) ) );

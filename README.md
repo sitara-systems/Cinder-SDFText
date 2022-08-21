@@ -1,8 +1,10 @@
 # Cinder-SdfText
+
 Based on [msdfgen](https://github.com/Chlumsky/msdfgen) by Viktor Chlumský.
 
 ## Building for Windows
-Clone `cinder` in an adjacent folder.  E.g.:
+
+Clone `cinder` in an adjacent folder. E.g.:
 
 ```
 myProject/
@@ -18,15 +20,11 @@ myProject/
 3. Build.
 4. Enjoy!
 
-See how the examples are built.  They use the property sheet `cinder-sdftext-example` to get the paths right, but otherwise are the same.
+See how the examples are built. They use the property sheet `cinder-sdftext-example` to get the paths right, but otherwise are the same.
 
 As of 2021 March 31, only the Debug x64 builds of all samples are correctly set up; the Release builds have not been updated.
 
-## Building for OSX and iOS
-1. Build lib first in ```xcode```
-1. Build samples in ```samples```
-
-## Windows, OSX, and iOS for now! Linux coming soon!
+## Examples
 
 ![Basic](https://cdn-standard.discourse.org/uploads/libcinder/optimized/1X/6550b3422474c85a7c46b4bc83c02c1a06bcf7e8_1_626x500.png)
 
