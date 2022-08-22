@@ -51,6 +51,7 @@ using SdfTextRef = std::shared_ptr<SdfText>;
 class SdfText {
 public:
 	typedef enum Alignment { LEFT, CENTER, RIGHT } Alignment;
+	typedef enum LeadingStyle { FULL, HALF } LeadingStyle;
 
 	//! \class Options
 	//!
@@ -119,9 +120,9 @@ public:
 		//! Sets whether the output glyphs are snapped to pixel boundaries. This sharpens static text but prevents subpixel animation
 		DrawOptions&	pixelSnap( bool pixelSnap = true ) { mPixelSnap = pixelSnap; return *this; }
 
-		//! Returns the tracking value, affecting spacing between individual characters. Default to \c zero.
+		//! Returns the tracking value, affecting spacing between individual characters. Measured in 1/1000 em. Default to \c zero.
 		float			getTracking() const { return mTracking; }
-		//! Sets the tracking value, affecting spacing between individual characters. Default to \c zero.
+		//! Sets the tracking value, affecting spacing between individual characters. Measured in 1/1000 em. Default to \c zero.
 		DrawOptions&	tracking( float tracking ) { mTracking = tracking; return *this; }
 
 		//! Returns whether advanced ligatures are used, which must have been instantiated by the \a supportedChars parameter of the TextureFont::create() call. Default to \c false.
@@ -134,15 +135,20 @@ public:
 		//! Sets the scale at which the type is rendered. 2 is double size. Default \c 1
 		DrawOptions&	scale( float sc ) { mScale = sc; return *this; }
 
-		//! Returns the leading (aka line gap) used adjust the line height when wrapping. Default \c "Auto"
+		//! Returns the leading (aka line gap) used adjust the line height when wrapping. Measured in percent. Default \c "Auto"
 		float			getLeading() const { return mLeading; }
-		//! Sets the leading (aka line gap) used adjust the line height when wrapping. Default \c "Auto"
+		//! Sets the leading (aka line gap) used adjust the line height when wrapping. Measured in percent. Default \c "Auto"
 		DrawOptions&	leading( float value ) { mLeading = value; return *this; }
 
 		//! Returns the horizontal alignment (LEFT, CENTER, RIGHT) of the type. Default \c LEFT
 		Alignment		getAlignment() const { return mAlign; }
 		//! Sets the horizontal alignment (LEFT, CENTER, RIGHT) of the type. Default \c LEFT
 		DrawOptions&	alignment( Alignment align ) { mAlign = align; return *this; }
+
+		//! Returns the leading style (FULL, HALF) of the type. Default \c FULL
+        LeadingStyle getLeadingStyle() const { return mLeadingStyle; }
+        //! Sets the leading style (FULL, HALF) of the type. Default \c FULL
+        DrawOptions& leadingStyle(LeadingStyle style) { mLeadingStyle = style; return *this; }
 
 		//! Returns whether the type is flushed to both the left and right sides. Default \c false
 		bool			getJustify() const { return mJustify; }
@@ -172,7 +178,8 @@ public:
 		bool			mPremultiply = false;
 		bool			mJustify = false;
 		float			mGamma = 2.2f;
-		Alignment		mAlign = LEFT;
+		Alignment		mAlign = Alignment::LEFT;
+        LeadingStyle mLeadingStyle = LeadingStyle::FULL;
 		GlslProgRef		mGlslProg;
 	};
 
@@ -279,6 +286,8 @@ public:
 	void	drawString( const std::string &str, const vec2 &baseline, const DrawOptions &options = DrawOptions() );
 	//! Draws string \a str fit inside \a fitRect vertically, with internal offset \a offset and DrawOptions \a options
 	void	drawString( const std::string &str, const Rectf &fitRect, const vec2 &offset = vec2(), const DrawOptions &options = DrawOptions() );
+	//! Draws string clipped in a rect vertically
+	void	drawStringClipped( const std::string &str, const Rectf &fitRect, const vec2 &offset = vec2(), const DrawOptions &options = DrawOptions() );
 	//! Draws word-wrapped string \a str fit inside \a fitRect, with internal offset \a offset and DrawOptions \a options.
 	void	drawStringWrapped( const std::string &str, const Rectf &fitRect, const vec2 &offset = vec2(), const DrawOptions &options = DrawOptions() );
 	//! Draws the glyphs in \a glyphMeasures at baseline \a baseline with DrawOptions \a options. \a glyphMeasures is a vector of pairs of glyph indices and offsets for the glyph baselines
@@ -321,6 +330,10 @@ public:
     float					getHeight() const { return mFont.getHeight(); }
     //! Returns the leading of the font
     float					getLeading() const { return mFont.getLeading(); }
+    //! Returns the size of the font
+    float                   getSize() const { return mFont.getSize(); }
+    //! Returns the scale of the font
+    float                   getFontScale() const { return mFont.getFontScale(); }
 
 	//! Returns the default set of characters for a TextureFont, suitable for most English text, including some common ligatures and accented vowels.
 	//! \c "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz1234567890().?!,:;'\"&*=+-/\\|@#_[]<>%^llflfiphridséáèà"

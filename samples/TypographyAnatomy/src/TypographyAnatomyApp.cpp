@@ -38,6 +38,7 @@ class TypographyAnatomyApp : public App {
     float mLeading;
 
     bool mDrawBoundingBoxes;
+    bool mDrawFitRects;
     bool mDrawAscenderLine;
     bool mDrawDescenderLine;
 
@@ -45,6 +46,7 @@ class TypographyAnatomyApp : public App {
     bool mJustify = false;
     bool mPremultiply = false;
     bool mLigate = false;
+    bool mUseHalfLeading = false;
 };
 
 void TypographyAnatomyApp::setup() {
@@ -80,10 +82,11 @@ void TypographyAnatomyApp::setup() {
     mSizeSelect = 0;
     mAlignmentSelect = 0;
     mDrawBoundingBoxes = false;
+    mDrawFitRects = false;
     mDrawAscenderLine = false;
     mDrawDescenderLine = false;
     mTracking = 0.0f;
-    mLeading = 38.0f;
+    mLeading = 1.0f;
 
     for (auto& font : mFonts) {
         for (auto& size : mFontSizes) {
@@ -120,12 +123,27 @@ void TypographyAnatomyApp::update() {
             for (auto& item : mFontSizes) {
                 if (ImGui::Selectable(toString(item).c_str(), counter == mSizeSelect)) {
                     mSizeSelect = counter;
-                    CI_LOG_I("Font Height: " << mFonts[mFontSelect].mFonts[mSizeSelect].getHeight());
-                    CI_LOG_I("Font Leading: " << mFonts[mFontSelect].mFonts[mSizeSelect].getLeading());
-                    CI_LOG_I("Font Ascent: " << mFonts[mFontSelect].mFonts[mSizeSelect].getAscent());
-                    CI_LOG_I("Font Descent: " << mFonts[mFontSelect].mFonts[mSizeSelect].getDescent());
-                    CI_LOG_I("Font Size: " << mFonts[mFontSelect].mFonts[mSizeSelect].getSize());
-                    CI_LOG_I("Font Scale: " << mFonts[mFontSelect].mFonts[mSizeSelect].getFontScale());
+                    CI_LOG_I("Read from Font:");
+                    CI_LOG_I("SdfText::Font Height: " << mFonts[mFontSelect].mFonts[mSizeSelect].getHeight());
+                    CI_LOG_I("SdfText::Font Leading: " << mFonts[mFontSelect].mFonts[mSizeSelect].getLeading());
+                    CI_LOG_I("SdfText::Font Ascent: " << mFonts[mFontSelect].mFonts[mSizeSelect].getAscent());
+                    CI_LOG_I("SdfText::Font Descent: " << mFonts[mFontSelect].mFonts[mSizeSelect].getDescent());
+                    CI_LOG_I("SdfText::Font Size: " << mFonts[mFontSelect].mFonts[mSizeSelect].getSize());
+                    CI_LOG_I("SdfText::Font Scale: " << mFonts[mFontSelect].mFonts[mSizeSelect].getFontScale());
+                    CI_LOG_I("Read from SdfText:");
+                    CI_LOG_I("SdfTextRef Height: " << mFonts[mFontSelect].mSdfTexts[mSizeSelect]->getHeight());
+                    CI_LOG_I("SdfTextRef Leading: " << mFonts[mFontSelect].mSdfTexts[mSizeSelect]->getLeading());
+                    CI_LOG_I("SdfTextRef Ascent: " << mFonts[mFontSelect].mSdfTexts[mSizeSelect]->getAscent());
+                    CI_LOG_I("SdfTextRef Descent: " << mFonts[mFontSelect].mSdfTexts[mSizeSelect]->getDescent());
+                    CI_LOG_I("SdfTextRef Size: " << mFonts[mFontSelect].mSdfTexts[mSizeSelect]->getSize());
+                    CI_LOG_I("SdfTextRef Scale: " << mFonts[mFontSelect].mSdfTexts[mSizeSelect]->getFontScale());
+                    CI_LOG_I("Read from SdfText->mFont");
+                    CI_LOG_I("SdfText->getFont() Height: " << mFonts[mFontSelect].mSdfTexts[mSizeSelect]->getFont().getHeight());
+                    CI_LOG_I("SdfText->getFont() Leading: " << mFonts[mFontSelect].mSdfTexts[mSizeSelect]->getFont().getLeading());
+                    CI_LOG_I("SdfText->getFont() Ascent: " << mFonts[mFontSelect].mSdfTexts[mSizeSelect]->getFont().getAscent());
+                    CI_LOG_I("SdfText->getFont() Descent: " << mFonts[mFontSelect].mSdfTexts[mSizeSelect]->getFont().getDescent());
+                    CI_LOG_I("SdfText->getFont() Size: " << mFonts[mFontSelect].mSdfTexts[mSizeSelect]->getFont().getSize());
+                    CI_LOG_I("SdfText->getFont() Scale: " << mFonts[mFontSelect].mSdfTexts[mSizeSelect]->getFont().getFontScale());
                 }
                 counter++;
             }
@@ -143,14 +161,16 @@ void TypographyAnatomyApp::update() {
             }
             ImGui::ListBoxFooter();
         }
-        ImGui::SliderFloat("Leading", &mLeading, 0.0f, 1000.0f);
-        ImGui::SliderFloat("Tracking", &mTracking, 0.0f, 1000.0f);
+        ImGui::SliderFloat("Leading (%)", &mLeading, 0.0f, 5.0f);
+        ImGui::SliderFloat("Tracking (1/1000 em)", &mTracking, -1000.0f, 1000.0f);
         ImGui::Checkbox("Justify Text", &mJustify);
         ImGui::Checkbox("Premultiply Text", &mPremultiply);
         ImGui::Checkbox("Use Ligatures", &mLigate);
+        ImGui::Checkbox("Use Half-Leading", &mUseHalfLeading);
     }
     if (ImGui::CollapsingHeader("Display Options", ImGuiTreeNodeFlags_DefaultOpen)) {
         ImGui::Checkbox("Draw Bounding Boxes", &mDrawBoundingBoxes);
+        ImGui::Checkbox("Draw Fit Rects", &mDrawFitRects);
         if (ImGui::Checkbox("Draw Ascender Line", &mDrawAscenderLine)) {
             CI_LOG_I("Ascent: " << mFonts[mFontSelect].mFonts[mSizeSelect].getAscent());        
         }
@@ -168,7 +188,7 @@ void TypographyAnatomyApp::draw() {
     gl::clear(Color(0, 0, 0));
 
     gl::SdfTextRef currentFont = mFonts[mFontSelect].mSdfTexts[mSizeSelect];
-    ci::vec2 baseline(500, currentFont->getHeight());
+    ci::vec2 baseline(500, currentFont->getFont().getSize());
 
     gl::SdfText::DrawOptions options;
 
@@ -184,6 +204,9 @@ void TypographyAnatomyApp::draw() {
     if (mLigate) {
         options.ligate(true);
     }
+    if (mUseHalfLeading) {
+        options.leadingStyle(gl::SdfText::HALF);
+    }
 
     switch (mAlignmentSelect) {
         case 0:
@@ -196,6 +219,10 @@ void TypographyAnatomyApp::draw() {
             options.alignment(gl::SdfText::RIGHT);
             break;
     }
+
+    /*
+    * Draw single lines using the simplest method
+    */
 
     for (auto& string : mSampleText) {
         gl::color(0.45f, 0.45f, 0.45f);
@@ -211,35 +238,78 @@ void TypographyAnatomyApp::draw() {
                          vec2(getWindowWidth(), baseline.y + currentFont->getDescent()));        
         }
 
-        gl::color(0, 0, 1.0f);
-        ci::Rectf textBox = currentFont->measureStringBounds(string, options);
-        if (textBox.getWidth() > maxWidth) {
-            maxWidth = textBox.getWidth();
+        ci::Rectf boundingBox = currentFont->measureStringBounds(string, options);
+
+        if (boundingBox.getWidth() > maxWidth) {
+            maxWidth = boundingBox.getWidth();
         }
+
         if (mDrawBoundingBoxes) {
             ci::gl::pushMatrices();
             ci::gl::translate(baseline);
-            gl::drawStrokedRect(textBox);
+            gl::color(0, 0.45f, 0.45f);
+            gl::drawStrokedRect(boundingBox);
             ci::gl::popMatrices();
         }
 
         gl::color(1, 1, 1);
         currentFont->drawString(string, baseline, options);
 
-        baseline.y += 2.0f*currentFont->getHeight();    
+        baseline.y += mLeading*currentFont->getFont().getSize();    
     }
 
+    /*
+    * Single line with fitRect
+    */
+    gl::color(0.45f, 0.45f, 0.45f);
+    gl::drawLine(vec2(0, baseline.y), vec2(getWindowWidth(), baseline.y));
+
+    ci::Rectf fitRect = ci::Rectf(
+        ci::vec2(baseline),
+        ci::vec2(baseline.x + maxWidth, baseline.y + 2 * mLeading * currentFont->getFont().getSize()));
+
+    if (mDrawBoundingBoxes) {
+        gl::color(0, 0.45f, 0.45f);
+        ci::gl::pushMatrices();
+        ci::gl::translate(baseline);
+        gl::drawStrokedRect(currentFont->measureStringBounds(mSampleText.front(), options));
+        ci::gl::popMatrices();
+    }
+
+    if (mDrawFitRects) {
+        gl::color(0.45f, 0.45f, 0);
+        gl::drawStrokedRect(fitRect);
+    }
+
+    gl::color(1, 1, 1);
+    currentFont->drawString(mSampleText.front(), fitRect, ci::vec2(0), options);
+
+    // skip three lines
+    for (int i = 0; i < 3; i++) {
+        baseline.y += mLeading * currentFont->getFont().getSize();
+        gl::color(0.45f, 0.45f, 0.45f);
+        gl::drawLine(vec2(0, baseline.y), vec2(getWindowWidth(), baseline.y));
+    }
+
+    /*
+    * Paragraph of text with fitRect
+    */
     ci::Rectf textBox(baseline, baseline + ci::vec2(maxWidth, 750));
 
     gl::color(0.45f, 0.45f, 0.45f);
     gl::drawLine(vec2(0, baseline.y), vec2(getWindowWidth(), baseline.y));
 
     if (mDrawBoundingBoxes) {
-        gl::color(0, 0, 1.0f);
+        gl::color(0, 0.45f, 0.45f);
         ci::gl::pushMatrices();
         ci::gl::translate(baseline);
         gl::drawStrokedRect(currentFont->measureStringBoundsWrapped(mSampleParagraph, textBox, options));
         ci::gl::popMatrices();
+    }
+
+    if (mDrawFitRects) {
+        gl::color(0.45f, 0.45f, 0);
+        gl::drawStrokedRect(textBox);
     }
 
     gl::color(1, 1, 1);
