@@ -86,7 +86,7 @@ void TypographyAnatomyApp::setup() {
     mDrawAscenderLine = false;
     mDrawDescenderLine = false;
     mTracking = 0.0f;
-    mLeading = 1.0f;
+    mLeading = 1.2f;
 
     for (auto& font : mFonts) {
         for (auto& size : mFontSizes) {
@@ -255,7 +255,7 @@ void TypographyAnatomyApp::draw() {
         gl::color(1, 1, 1);
         currentFont->drawString(string, baseline, options);
 
-        baseline.y += mLeading*currentFont->getFont().getSize();    
+        baseline.y += currentFont->measureLineHeight(options);    
     }
 
     /*
@@ -266,27 +266,30 @@ void TypographyAnatomyApp::draw() {
 
     ci::Rectf fitRect = ci::Rectf(
         ci::vec2(baseline),
-        ci::vec2(baseline.x + maxWidth, baseline.y + 2 * mLeading * currentFont->getFont().getSize()));
+        ci::vec2(baseline.x + 1.5*maxWidth, baseline.y + 2 * mLeading * currentFont->getFont().getSize()));
 
     if (mDrawBoundingBoxes) {
         gl::color(0, 0.45f, 0.45f);
         ci::gl::pushMatrices();
         ci::gl::translate(baseline);
-        gl::drawStrokedRect(currentFont->measureStringBounds(mSampleText.front(), options));
+        gl::drawStrokedRect(currentFont->measureStringBounds(mSampleText.front(), fitRect, options));
         ci::gl::popMatrices();
     }
+
+    gl::color(1, 1, 1);
+    ci::Rectf updatedRect = currentFont->drawString(mSampleText.front(), fitRect, ci::vec2(0), options);
 
     if (mDrawFitRects) {
         gl::color(0.45f, 0.45f, 0);
         gl::drawStrokedRect(fitRect);
+        gl::color(0.45, 0, 0);
+        gl::drawStrokedRect(updatedRect);
     }
 
-    gl::color(1, 1, 1);
-    currentFont->drawString(mSampleText.front(), fitRect, ci::vec2(0), options);
 
     // skip three lines
     for (int i = 0; i < 3; i++) {
-        baseline.y += mLeading * currentFont->getFont().getSize();
+        baseline.y += currentFont->measureLineHeight(options);
         gl::color(0.45f, 0.45f, 0.45f);
         gl::drawLine(vec2(0, baseline.y), vec2(getWindowWidth(), baseline.y));
     }
@@ -303,17 +306,20 @@ void TypographyAnatomyApp::draw() {
         gl::color(0, 0.45f, 0.45f);
         ci::gl::pushMatrices();
         ci::gl::translate(baseline);
-        gl::drawStrokedRect(currentFont->measureStringBoundsWrapped(mSampleParagraph, textBox, options));
+        gl::drawStrokedRect(currentFont->measureStringBounds(mSampleParagraph, textBox, options));
         ci::gl::popMatrices();
     }
+
+    gl::color(1, 1, 1);
+    updatedRect = currentFont->drawString(mSampleParagraph, textBox, ci::vec2(0), options);
 
     if (mDrawFitRects) {
         gl::color(0.45f, 0.45f, 0);
         gl::drawStrokedRect(textBox);
+        gl::color(0.45, 0, 0);
+        gl::drawStrokedRect(updatedRect);
     }
 
-    gl::color(1, 1, 1);
-    currentFont->drawStringWrapped(mSampleParagraph, textBox, ci::vec2(0), options);
 }
 
 CINDER_APP(TypographyAnatomyApp, RendererGl, [=](cinder::app::App::Settings* settings) {

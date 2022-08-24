@@ -52,11 +52,13 @@ The `TypographyAnatomy` example provides a clear example of `fitRect` vs boundin
 
 ### Anchoring
 
-Using `drawString` with and without a `fitRect` creates substantially different effects.
+Using methods with and without a `fitRect` creates substantially different effects.
 
 With a `fitRect`, anchoring (the position you place the text at) gives the top-left corner of the text box _containing_ the text. Without a `fitRect`, your position will be the baseline (bottom of the text). In practical terms, with a baseline the text appears _above_ the position, with a `fitRect` it will show up `below`. In `TypographyAnatomy` you can see how as you increase the leading, the last two text samples (drawn with `fitRect`s) will stay anchored to the baseline above them.
 
 Alignment will also work differently. With a `fitRect`, the `SdfText::Alignment` options will align the text _inside_ of the box to be flush left, centered, or flush right. When using a baseline, the alignment setting will align the text so the the anchor point is either the bottom-left, bottom-center, or bottom-right of the text.
+
+Examples of functions that can take either a baseline or a fitRect are `measureStringBounds`, `measureString`, and `drawString`.
 
 ## Examples
 

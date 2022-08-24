@@ -1202,7 +1202,7 @@ std::vector<std::string> SdfTextBox::calculateLineBreaks() const
 	return result;
 }
 
-SdfText::Font::GlyphMeasuresList SdfTextBox::measureGlyphs( const SdfText::DrawOptions& drawOptions ) const
+SdfText::Font::GlyphMeasuresList SdfTextBox::measureGlyphs( const SdfText::DrawOptions& drawOptions )
 {
 	SdfText::Font::GlyphMeasuresList result;
 
@@ -1214,10 +1214,10 @@ SdfText::Font::GlyphMeasuresList SdfTextBox::measureGlyphs( const SdfText::DrawO
 	const float fontSizeScale = font.getSize() / 32.0f;
 	const float ascent        = font.getAscent();
 	const float descent       = font.getDescent();
-	const float leading       = drawOptions.getLeading();
-	const float drawScale     = drawOptions.getScale();
-	const auto  align         = drawOptions.getAlignment();
-	const float lineHeight    = ( leading != leading ) ? drawScale * 1.20f * font.getSize() : drawScale * leading * font.getSize(); // Leading will be NaN if not defined.
+    const float drawScale     = drawOptions.getScale();
+    const auto align          = drawOptions.getAlignment();
+    const float leading       = drawScale * (drawOptions.getLeading() - 1.0f) * font.getSize();
+	const float lineHeight    = drawScale * font.getSize() + leading;
 
 	// Calculate the line breaks
 	std::vector<std::string> mLines = calculateLineBreaks();
@@ -1229,14 +1229,14 @@ SdfText::Font::GlyphMeasuresList SdfTextBox::measureGlyphs( const SdfText::DrawO
 	const auto& charToGlyph = mSdfText->getCharToGlyph();
 	const auto& glyphMetrics = mSdfText->getGlyphMetrics();
 	std::u32string utf32Chars, nextUtf32Chars;
-	float curY = 0;
+	mSize.y = 0;
 
 	// if we were given a fitRect, then the text needs to go *inside* the fitRect, not using the top-left corner as the baseline
-	if (mSize.y != 0) {
-        curY += drawScale * font.getSize();
+	if (mSize.x != 0) {
+        mSize.y += (lineHeight - leading);
         // adjust starting point for full- or half-leading; only takes effect if we're using a fitRect
         if (drawOptions.getLeadingStyle() == SdfText::LeadingStyle::HALF) {
-            curY += 0.5f * lineHeight;
+            mSize.y += 0.5f*leading;
         }
     }
 
@@ -1291,7 +1291,7 @@ SdfText::Font::GlyphMeasuresList SdfTextBox::measureGlyphs( const SdfText::DrawO
 			}
 
 			float xPos = pen.x;
-			result.push_back( std::make_pair( (uint32_t)glyphIndex, vec2( xPos, curY ) ) );
+                        result.push_back(std::make_pair((uint32_t)glyphIndex, vec2(xPos, mSize.y)));
 
 			pen += advance;
 		}
@@ -1351,7 +1351,15 @@ SdfText::Font::GlyphMeasuresList SdfTextBox::measureGlyphs( const SdfText::DrawO
 			}
 		}
 
-		curY += lineHeight;
+		if ((lineIt + 1) != mLines.end()) {
+            mSize.y += lineHeight;
+		}
+	}
+
+	if (drawOptions.getLeadingStyle() == SdfText::LeadingStyle::HALF) {
+        mSize.y += 0.5f * leading;
+    } else {
+        mSize.y += leading;
 	}
 
 	return result;
@@ -2294,31 +2302,32 @@ void SdfText::drawString( const std::string &str, const vec2 &baseline, const Dr
 	drawGlyphs( glyphMeasures, baseline, options );
 }
 
-void SdfText::drawString(const std::string& str, const Rectf& fitRect, const vec2& offset, const DrawOptions& options) {
-    SdfTextBox tbox = SdfTextBox(this)
-                          .text(str)
-                          .size(SdfTextBox::GROW, (int)fitRect.getHeight())
-                          .ligate(options.getLigate())
-                          .tracking(options.getTracking());
-    SdfText::Font::GlyphMeasuresList glyphMeasures = tbox.measureGlyphs(options);
-    drawGlyphs(glyphMeasures, fitRect.getUpperLeft() + offset, options);
-}
+//void SdfText::drawString(const std::string& str, const Rectf& fitRect, const vec2& offset, const DrawOptions& options) {
+//    SdfTextBox tbox = SdfTextBox(this)
+//                          .text(str)
+//                          .size(SdfTextBox::GROW, (int)fitRect.getHeight())
+//                          .ligate(options.getLigate())
+//                          .tracking(options.getTracking());
+//    SdfText::Font::GlyphMeasuresList glyphMeasures = tbox.measureGlyphs(options);
+//    drawGlyphs(glyphMeasures, fitRect.getUpperLeft() + offset, options);
+//}
+//
+//void SdfText::drawStringClipped(const std::string& str, const Rectf& fitRect, const vec2& offset, const DrawOptions& options) {
+//    SdfTextBox tbox = SdfTextBox(this)
+//                          .text(str)
+//                          .size(SdfTextBox::GROW, (int)fitRect.getHeight())
+//                          .ligate(options.getLigate())
+//                          .tracking(options.getTracking());
+//    SdfText::Font::GlyphMeasuresList glyphMeasures = tbox.measureGlyphs(options);
+//    drawGlyphs( glyphMeasures, fitRect, fitRect.getUpperLeft() + offset, options );
+//}
 
-void SdfText::drawStringClipped(const std::string& str, const Rectf& fitRect, const vec2& offset, const DrawOptions& options) {
-    SdfTextBox tbox = SdfTextBox(this)
-                          .text(str)
-                          .size(SdfTextBox::GROW, (int)fitRect.getHeight())
-                          .ligate(options.getLigate())
-                          .tracking(options.getTracking());
-    SdfText::Font::GlyphMeasuresList glyphMeasures = tbox.measureGlyphs(options);
-    drawGlyphs( glyphMeasures, fitRect, fitRect.getUpperLeft() + offset, options );
-}
-
-void SdfText::drawStringWrapped( const std::string &str, const Rectf &fitRect, const vec2 &offset, const DrawOptions &options )
+ci::Rectf SdfText::drawString( const std::string &str, const Rectf &fitRect, const vec2 &offset, const DrawOptions &options )
 {
-	SdfTextBox tbox = SdfTextBox( this ).text( str ).size( (int)fitRect.getWidth(), (int)fitRect.getHeight() ).ligate( options.getLigate() ).tracking( options.getTracking() );
+	SdfTextBox tbox = SdfTextBox( this ).text( str ).size( (int)fitRect.getWidth(), SdfTextBox::GROW).ligate( options.getLigate() ).tracking( options.getTracking() );
 	SdfText::Font::GlyphMeasuresList glyphMeasures = tbox.measureGlyphs( options );
 	drawGlyphs( glyphMeasures, fitRect.getUpperLeft() + offset, options );
+    return ci::Rectf(fitRect.getUpperLeft(), fitRect.getUpperLeft() + ci::vec2(tbox.getSize()));
 }
 
 std::vector<std::pair<uint8_t, std::vector<SdfText::CharPlacement>>> SdfText::placeChars( const SdfText::Font::GlyphMeasuresList &glyphMeasures, const vec2 &baselineIn, const DrawOptions &options )
@@ -2400,7 +2409,7 @@ std::vector<std::pair<uint8_t, std::vector<SdfText::CharPlacement>>> SdfText::pl
 	return result;
 }
 
-std::vector<std::pair<uint8_t, std::vector<SdfText::CharPlacement>>> SdfText::placeStringWrapped( const std::string &str, const Rectf &fitRect, const vec2 &offset, const DrawOptions &options )
+std::vector<std::pair<uint8_t, std::vector<SdfText::CharPlacement>>> SdfText::placeString( const std::string &str, const Rectf &fitRect, const vec2 &offset, const DrawOptions &options )
 {
 	SdfTextBox tbox = SdfTextBox( this ).text( str ).size( (int)fitRect.getWidth(), (int)fitRect.getHeight() ).ligate( options.getLigate() ).tracking( options.getTracking() );
 	SdfText::Font::GlyphMeasuresList glyphMeasures = tbox.measureGlyphs( options );
@@ -2537,9 +2546,8 @@ Rectf SdfText::measureStringBounds( const std::string &str, const DrawOptions &o
 */
 }
 
-Rectf SdfText::measureStringBoundsWrapped( const std::string &str, const Rectf &fitRect, const DrawOptions &options ) const
-{
-    Rectf result = measureStringImpl( str, true, fitRect, options );
+Rectf SdfText::measureStringBounds(const std::string& str, const Rectf& fitRect, const DrawOptions& options) const {
+    Rectf result = measureStringImpl(str, true, fitRect, options);
     return result;
 }
 
@@ -2550,12 +2558,29 @@ vec2 SdfText::measureString( const std::string &str, const DrawOptions &options 
 	return result;
 }
 
-vec2 SdfText::measureStringWrapped( const std::string &str, const Rectf &fitRect, const DrawOptions &options ) const
+vec2 SdfText::measureString( const std::string &str, const Rectf &fitRect, const DrawOptions &options ) const
 {
     Rectf bounds = measureStringImpl( str, true, fitRect, options );
 	vec2 result = vec2( bounds.getWidth(), bounds.getHeight() );
 	return result;
 }
+
+float SdfText::measureLineHeight(const DrawOptions& options) const {
+    const float leading = options.getLeading();
+    const float drawScale = options.getScale();
+    const float lineHeight = (leading != leading)
+                                 ? drawScale * 1.20f * mFont.getSize()
+                                 : drawScale * leading * mFont.getSize();  // Leading will be NaN if not defined.
+    return lineHeight;
+}
+
+void SdfText::updateLeadingFromLineHeight(DrawOptions& options, float lineHeight) const {
+    const float drawScale = options.getScale();
+	float desiredLeadingInPixels = lineHeight - drawScale*mFont.getSize();
+    float desiredLeading = desiredLeadingInPixels / (drawScale * mFont.getSize());
+    options.leading(desiredLeading);
+}
+
 
 std::vector<std::pair<SdfText::Font::Glyph, vec2>> SdfText::getGlyphPlacements( const std::string &str, const DrawOptions &options ) const
 {

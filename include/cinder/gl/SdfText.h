@@ -103,7 +103,7 @@ public:
 	//!
 	//!
 	struct DrawOptions {
-		DrawOptions() : mClipHorizontal( true ), mClipVertical( true ), mPixelSnap( true ), mLigate( false ), mScale( 1 ) {}
+		DrawOptions() : mClipHorizontal( true ), mClipVertical( true ), mPixelSnap( true ), mLigate( false ), mScale( 1 ), mLeading(1.2f) {}
 
 		//! Returns whether the output clips horizontally
 		bool			getClipHorizontal() const { return mClipHorizontal; }		
@@ -173,13 +173,13 @@ public:
 	  protected:
 		bool			mClipHorizontal, mClipVertical, mPixelSnap, mLigate;
 		float			mScale = 2.0;
-		float			mLeading = std::numeric_limits<float>::signaling_NaN();
+        float           mLeading = 1.2f;
 		float			mTracking = 0.0f;
 		bool			mPremultiply = false;
 		bool			mJustify = false;
 		float			mGamma = 2.2f;
 		Alignment		mAlign = Alignment::LEFT;
-        LeadingStyle mLeadingStyle = LeadingStyle::FULL;
+        LeadingStyle    mLeadingStyle = LeadingStyle::FULL;
 		GlslProgRef		mGlslProg;
 	};
 
@@ -282,35 +282,47 @@ public:
 	static SdfTextRef		load( const DataSourceRef& source, float size = 0 );
 	static SdfTextRef		load( const fs::path& filePath, float size = 0 );
 
+	/*
+	* Drawing methods
+	* Only two ways to draw - either with a baseline (ci::vec2) or with a fitRect
+	*/
 	//! Draws string \a str at baseline \a baseline with DrawOptions \a options
-	void	drawString( const std::string &str, const vec2 &baseline, const DrawOptions &options = DrawOptions() );
-	//! Draws string \a str fit inside \a fitRect vertically, with internal offset \a offset and DrawOptions \a options
-	void	drawString( const std::string &str, const Rectf &fitRect, const vec2 &offset = vec2(), const DrawOptions &options = DrawOptions() );
-	//! Draws string clipped in a rect vertically
-	void	drawStringClipped( const std::string &str, const Rectf &fitRect, const vec2 &offset = vec2(), const DrawOptions &options = DrawOptions() );
-	//! Draws word-wrapped string \a str fit inside \a fitRect, with internal offset \a offset and DrawOptions \a options.
-	void	drawStringWrapped( const std::string &str, const Rectf &fitRect, const vec2 &offset = vec2(), const DrawOptions &options = DrawOptions() );
+	void	    drawString( const std::string &str, const vec2 &baseline, const DrawOptions &options = DrawOptions() );
+	//! Draws string \a str fit inside \a fitRect horizontally, with internal offset \a offset and DrawOptions \a options
+	ci::Rectf	drawString( const std::string &str, const Rectf &fitRect, const vec2 &offset = vec2(), const DrawOptions &options = DrawOptions() );
 	//! Draws the glyphs in \a glyphMeasures at baseline \a baseline with DrawOptions \a options. \a glyphMeasures is a vector of pairs of glyph indices and offsets for the glyph baselines
-	void	drawGlyphs( const SdfText::Font::GlyphMeasuresList &glyphMeasures, const vec2 &baseline, const DrawOptions &options = DrawOptions(), const std::vector<ColorA8u> &colors = std::vector<ColorA8u>() );
+	void	    drawGlyphs( const SdfText::Font::GlyphMeasuresList &glyphMeasures, const vec2 &baseline, const DrawOptions &options = DrawOptions(), const std::vector<ColorA8u> &colors = std::vector<ColorA8u>() );
 	//! Draws the glyphs in \a glyphMeasures clipped by \a clip, with \a offset added to each of the glyph offsets with DrawOptions \a options. \a glyphMeasures is a vector of pairs of glyph indices and offsets for the glyph baselines.
-	void	drawGlyphs( const SdfText::Font::GlyphMeasuresList &glyphMeasures, const Rectf &clip, vec2 offset, const DrawOptions &options = DrawOptions(), const std::vector<ColorA8u> &colors = std::vector<ColorA8u>() );
+	void	    drawGlyphs( const SdfText::Font::GlyphMeasuresList &glyphMeasures, const Rectf &clip, vec2 offset, const DrawOptions &options = DrawOptions(), const std::vector<ColorA8u> &colors = std::vector<ColorA8u>() );
 
 	//! Returns pairs of texture and final texture and vertex coords for drawing using \a glyphMeasures, \a baseline, and \a options.
 	std::vector<std::pair<uint8_t, std::vector<SdfText::CharPlacement>>>	placeChars( const SdfText::Font::GlyphMeasuresList &glyphMeasures, const vec2 &baseline, const DrawOptions &options = DrawOptions() );
 	//! Returns pairs of texture and final texture and vertex coords for drawing using \a str, \a baseline, and \a options.
 	std::vector<std::pair<uint8_t, std::vector<SdfText::CharPlacement>>>	placeString( const std::string &str, const vec2 &baseline, const DrawOptions &options = DrawOptions() );
 	//! Returns pairs of texture and final texture and vertex coords for wrapped drawing using \a str, \a fitRect,  \a offset, and \a options.
-	std::vector<std::pair<uint8_t, std::vector<SdfText::CharPlacement>>>	placeStringWrapped( const std::string &str, const Rectf &fitRect, const vec2 &offset = vec2(), const DrawOptions &options = DrawOptions() );
+	std::vector<std::pair<uint8_t, std::vector<SdfText::CharPlacement>>>	placeString( const std::string &str, const Rectf &fitRect, const vec2 &offset = vec2(), const DrawOptions &options = DrawOptions() );
 	
+	/*
+	* Measure methods
+	*/
+
 	//! Returns the bounds (as a Rectf) in pixels necessary to render the string \a str with DrawOptions \a options.
 	Rectf	measureStringBounds( const std::string &str, const DrawOptions &options = DrawOptions() ) const;
-	//! Returns the word-wrapped bounds (as a Rectf) in pixels necessary to render the string \a str with DrawOptions \a options.
-	Rectf	measureStringBoundsWrapped( const std::string &str, const Rectf &fitRect, const DrawOptions &options = DrawOptions() ) const;
+	//! Returns the bounds (as a Rectf) in pixels necessary to render the string \a str with DrawOptions \a options.
+    Rectf   measureStringBounds(const std::string& str, const Rectf& fitRect, const DrawOptions& options = DrawOptions()) const;
 	//! Returns the size in pixels necessary to render the string \a str with DrawOptions \a options.
 	vec2	measureString( const std::string &str, const DrawOptions &options = DrawOptions() ) const;
 	//! Returns the word-wrapped size in pixels necessary to render the string \a str with DrawOptions \a options.
-	vec2	measureStringWrapped( const std::string &str, const Rectf &fitRect, const DrawOptions &options = DrawOptions() ) const;
-    
+	vec2	measureString( const std::string &str, const Rectf &fitRect, const DrawOptions &options = DrawOptions() ) const;
+	//! Returns the line-height for a given font size and draw options
+    float   measureLineHeight(const DrawOptions& options = DrawOptions()) const;
+	//! Updates .leading() in DrawOptions to match for a desired lineHeight -- useful for centering text vertically!
+    void    updateLeadingFromLineHeight(DrawOptions& options, float lineHeight) const;
+
+	/*
+	* Glyph Methods
+	*/
+
 	//! Returns a vector of glyph/placement pairs representing \a str, suitable for use with drawGlyphs. Useful for caching placement and optimizing batching.
 	std::vector<std::pair<SdfText::Font::Glyph,vec2>>		getGlyphPlacements( const std::string &str, const DrawOptions &options = DrawOptions() ) const;
 	//! Returns a vector of glyph/placement pairs representing \a str fit inside \a fitRect, suitable for use with drawGlyphs. Useful for caching placement and optimizing batching.
@@ -404,7 +416,7 @@ public:
 	void					setJustifySpaceCount( int justifySpaceCount ) { mJustifySpaceCount = justifySpaceCount; }
 
 	std::vector<std::string>			calculateLineBreaks() const;
-	SdfText::Font::GlyphMeasuresList	measureGlyphs( const SdfText::DrawOptions& drawOptions ) const;
+	SdfText::Font::GlyphMeasuresList	measureGlyphs( const SdfText::DrawOptions& drawOptions );
 
 private:
 	const SdfText		*mSdfText = nullptr;

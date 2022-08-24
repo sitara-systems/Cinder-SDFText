@@ -294,8 +294,8 @@ void SdfTextMesh::cache()
 			if( run->getWrapped() ) {
 				const Rectf &fitRect = run->getFitRect();
 				vec2 offset = vec2( run->getPosition() );
-				placements = sdfText->placeStringWrapped( run->getUtf8(), fitRect, offset, options.getDrawOptions() );
-				bounds = sdfText->measureStringBoundsWrapped( run->getUtf8(), fitRect, options.getDrawOptions() );
+				placements = sdfText->placeString( run->getUtf8(), fitRect, offset, options.getDrawOptions() );
+				bounds = sdfText->measureStringBounds( run->getUtf8(), fitRect, options.getDrawOptions() );
 				bounds += vec2( fitRect.x1, fitRect.y1 );
 				bounds += offset;
 			}
