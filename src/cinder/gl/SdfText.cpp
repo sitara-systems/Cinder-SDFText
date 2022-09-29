@@ -1216,8 +1216,11 @@ SdfText::Font::GlyphMeasuresList SdfTextBox::measureGlyphs( const SdfText::DrawO
 	const float descent       = font.getDescent();
     const float drawScale     = drawOptions.getScale();
     const auto align          = drawOptions.getAlignment();
-    const float leading       = drawScale * (drawOptions.getLeading() - 1.0f) * font.getSize();
-	const float lineHeight    = drawScale * font.getSize() + leading;
+	// leading is JUST the leading -- additional space.  Normal to specify as a % (e.g. 120%) but this is adjusted to make math simpler below
+    const float leadingSpacing       = drawScale * (drawOptions.getLeading() - 1.0f) * font.getSize();
+	// lineheight is font + leading
+	//const float lineHeight    = drawScale * font.getSize() + leading;
+    const float lineHeight = mSdfText->measureLineHeight(drawOptions);
 
 	// Calculate the line breaks
 	std::vector<std::string> mLines = calculateLineBreaks();
@@ -1233,11 +1236,7 @@ SdfText::Font::GlyphMeasuresList SdfTextBox::measureGlyphs( const SdfText::DrawO
 
 	// if we were given a fitRect, then the text needs to go *inside* the fitRect, not using the top-left corner as the baseline
 	if (mSize.x != 0) {
-        mSize.y += (lineHeight - leading);
-        // adjust starting point for full- or half-leading; only takes effect if we're using a fitRect
-        if (drawOptions.getLeadingStyle() == SdfText::LeadingStyle::HALF) {
-            mSize.y += 0.5f*leading;
-        }
+        mSize.y += lineHeight - 0.5f*leadingSpacing;
     }
 
 
@@ -1356,11 +1355,7 @@ SdfText::Font::GlyphMeasuresList SdfTextBox::measureGlyphs( const SdfText::DrawO
 		}
 	}
 
-	if (drawOptions.getLeadingStyle() == SdfText::LeadingStyle::HALF) {
-        mSize.y += 0.5f * leading;
-    } else {
-        mSize.y += leading;
-	}
+	mSize.y += 0.5f*leadingSpacing;
 
 	return result;
 }

@@ -170,8 +170,14 @@ public:
 		//! Sets a custom shader to use when the type is rendered.
 		DrawOptions&		glslProg( const GlslProgRef &glslProg ) { mGlslProg = glslProg; return *this; }
 
+		//! Returns whether the fit rect gets resized
+        bool getResizeFitRect() const { return mResizeFitRect; }
+        //! Sets whether the fit rect gets resized
+        DrawOptions& resizeFitRect(bool resize = false) { mResizeFitRect = resize; return *this; }
+
+
 	  protected:
-		bool			mClipHorizontal, mClipVertical, mPixelSnap, mLigate;
+		bool			mClipHorizontal, mClipVertical, mPixelSnap, mLigate, mResizeFitRect;
 		float			mScale = 2.0;
         float           mLeading = 1.2f;
 		float			mTracking = 0.0f;
@@ -340,7 +346,7 @@ public:
 	float					getDescent() const { return mFont.getDescent(); }
     //! Returns the height of the font
     float					getHeight() const { return mFont.getHeight(); }
-    //! Returns the leading of the font
+    //! Returns the leading of the font, as percentage of font size
     float					getLeading() const { return mFont.getLeading(); }
     //! Returns the size of the font
     float                   getSize() const { return mFont.getSize(); }

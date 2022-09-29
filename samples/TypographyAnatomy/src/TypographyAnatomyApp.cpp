@@ -73,10 +73,7 @@ void TypographyAnatomyApp::setup() {
 
     mSampleParagraph =
         "Lorem ipsum dolor sit amet, consectetur adipiscing elit. Nullam in velit vehicula, porta ligula ut, luctus "
-        "justo. Aliquam vitae ullamcorper odio. Nullam placerat erat nunc, id faucibus nisl pretium eget. Integer a "
-        "nisi laoreet, dignissim leo facilisis, iaculis est. Aliquam eu fermentum felis. Morbi pulvinar magna et "
-        "pulvinar ultricies. Cras turpis est, rhoncus mollis luctus in, tristique ac quam. Cras molestie urna augue, "
-        "at molestie urna fringilla nec.";
+        "justo. Aliquam vitae ullamcorper odio. Nullam placerat erat nunc, id faucibus nisl pretium eget. Integer a ";
 
     mFontSelect = 0;
     mSizeSelect = 0;
@@ -86,7 +83,7 @@ void TypographyAnatomyApp::setup() {
     mDrawAscenderLine = false;
     mDrawDescenderLine = false;
     mTracking = 0.0f;
-    mLeading = 1.2f;
+    mLeading = 1.0f;
 
     for (auto& font : mFonts) {
         for (auto& size : mFontSizes) {
@@ -220,6 +217,9 @@ void TypographyAnatomyApp::draw() {
             break;
     }
 
+    float lineHeight = currentFont->measureLineHeight(options);
+
+
     /*
     * Draw single lines using the simplest method
     */
@@ -227,22 +227,15 @@ void TypographyAnatomyApp::draw() {
     for (auto& string : mSampleText) {
         gl::color(0.45f, 0.45f, 0.45f);
         gl::drawLine(vec2(0, baseline.y), vec2(getWindowWidth(), baseline.y));
-        if (mDrawAscenderLine) {
-            gl::color(0.45f, 0, 0);
-            gl::drawLine(vec2(0, baseline.y - currentFont->getAscent()),
-                         vec2(getWindowWidth(), baseline.y - currentFont->getAscent()));
-        }
-        if (mDrawDescenderLine) {
-            gl::color(0, 0.45f, 0);
-            gl::drawLine(vec2(0, baseline.y + currentFont->getDescent()),
-                         vec2(getWindowWidth(), baseline.y + currentFont->getDescent()));        
-        }
 
         ci::Rectf boundingBox = currentFont->measureStringBounds(string, options);
 
         if (boundingBox.getWidth() > maxWidth) {
             maxWidth = boundingBox.getWidth();
         }
+
+        gl::color(1, 1, 1);
+        currentFont->drawString(string, baseline, options);
 
         if (mDrawBoundingBoxes) {
             ci::gl::pushMatrices();
@@ -252,10 +245,20 @@ void TypographyAnatomyApp::draw() {
             ci::gl::popMatrices();
         }
 
-        gl::color(1, 1, 1);
-        currentFont->drawString(string, baseline, options);
 
-        baseline.y += currentFont->measureLineHeight(options);    
+        if (mDrawAscenderLine) {
+            gl::color(0.45f, 0, 0);
+            gl::drawLine(vec2(0, baseline.y - currentFont->getAscent()),
+                         vec2(getWindowWidth(), baseline.y - currentFont->getAscent()));
+        }
+        if (mDrawDescenderLine) {
+            gl::color(0, 0.45f, 0);
+            gl::drawLine(vec2(0, baseline.y + currentFont->getDescent()),
+                         vec2(getWindowWidth(), baseline.y + currentFont->getDescent()));
+        }
+
+
+        baseline.y += lineHeight;    
     }
 
     /*
@@ -287,9 +290,9 @@ void TypographyAnatomyApp::draw() {
     }
 
 
-    // skip three lines
-    for (int i = 0; i < 3; i++) {
-        baseline.y += currentFont->measureLineHeight(options);
+    // skip two lines
+    for (int i = 0; i < 2; i++) {
+        baseline.y += lineHeight;
         gl::color(0.45f, 0.45f, 0.45f);
         gl::drawLine(vec2(0, baseline.y), vec2(getWindowWidth(), baseline.y));
     }
@@ -320,6 +323,39 @@ void TypographyAnatomyApp::draw() {
         gl::drawStrokedRect(updatedRect);
     }
 
+    baseline.y += lineHeight;
+    ci::gl::drawSolidCircle(baseline, 5);
+
+    while (baseline.y <= updatedRect.y2) { 
+        gl::color(0.45f, 0.45f, 0.45f);
+        gl::drawLine(vec2(0, baseline.y), vec2(getWindowWidth(), baseline.y));
+
+        if (mDrawAscenderLine) {
+            gl::color(0.45f, 0, 0);
+            gl::drawLine(vec2(0, baseline.y - currentFont->getAscent()),
+                            vec2(getWindowWidth(), baseline.y - currentFont->getAscent()));
+        }
+        if (mDrawDescenderLine) {
+            gl::color(0, 0.45f, 0);
+            gl::drawLine(vec2(0, baseline.y + currentFont->getDescent()),
+                         vec2(getWindowWidth(), baseline.y + currentFont->getDescent()));
+        }
+        baseline.y += lineHeight;
+    }
+
+    gl::color(0.45f, 0.45f, 0.45f);
+    gl::drawLine(vec2(0, baseline.y), vec2(getWindowWidth(), baseline.y));
+
+    if (mDrawAscenderLine) {
+        gl::color(0.45f, 0, 0);
+        gl::drawLine(vec2(0, baseline.y - currentFont->getAscent()),
+                     vec2(getWindowWidth(), baseline.y - currentFont->getAscent()));
+    }
+    if (mDrawDescenderLine) {
+        gl::color(0, 0.45f, 0);
+        gl::drawLine(vec2(0, baseline.y + currentFont->getDescent()),
+                     vec2(getWindowWidth(), baseline.y + currentFont->getDescent()));
+    }
 }
 
 CINDER_APP(TypographyAnatomyApp, RendererGl, [=](cinder::app::App::Settings* settings) {
