@@ -51,6 +51,7 @@ using SdfTextRef = std::shared_ptr<SdfText>;
 class SdfText {
 public:
 	typedef enum Alignment { LEFT, CENTER, RIGHT } Alignment;
+	typedef enum VerticalAlignment { TOP, MIDDLE, BOTTOM } VerticalAlignment;
 	typedef enum LeadingStyle { FULL, HALF } LeadingStyle;
 
 	//! \class Options
@@ -145,6 +146,14 @@ public:
 		//! Sets the horizontal alignment (LEFT, CENTER, RIGHT) of the type. Default \c LEFT
 		DrawOptions&	alignment( Alignment align ) { mAlign = align; return *this; }
 
+		//! Returns the vertical alignment (TOP, MIDDLE, BOTTOM) of the type. Default \c LEFT
+        VerticalAlignment getVerticalAlignment() const { return mVerticalAlign; }
+        //! Sets the horizontal alignment (TOP, MIDDLE, BOTTOM) of the type. Default \c LEFT
+        DrawOptions& verticalAlignment(VerticalAlignment align) {
+            mVerticalAlign = align;
+            return *this;
+        }
+
 		//! Returns the leading style (FULL, HALF) of the type. Default \c FULL
         LeadingStyle getLeadingStyle() const { return mLeadingStyle; }
         //! Sets the leading style (FULL, HALF) of the type. Default \c FULL
@@ -177,16 +186,17 @@ public:
 
 
 	  protected:
-		bool			mClipHorizontal, mClipVertical, mPixelSnap, mLigate, mResizeFitRect;
-		float			mScale = 2.0;
-        float           mLeading = 1.2f;
-		float			mTracking = 0.0f;
-		bool			mPremultiply = false;
-		bool			mJustify = false;
-		float			mGamma = 2.2f;
-		Alignment		mAlign = Alignment::LEFT;
-        LeadingStyle    mLeadingStyle = LeadingStyle::FULL;
-		GlslProgRef		mGlslProg;
+        bool mClipHorizontal, mClipVertical, mPixelSnap, mLigate, mResizeFitRect;
+		float mScale = 2.0;
+        float mLeading = 1.2f;
+        float mTracking = 0.0f;
+        bool mPremultiply = false;
+        bool mJustify = false;
+        float mGamma = 2.2f;
+        Alignment mAlign = Alignment::LEFT;
+        VerticalAlignment mVerticalAlign = VerticalAlignment::TOP;
+        LeadingStyle mLeadingStyle = LeadingStyle::FULL;
+        GlslProgRef mGlslProg;
 	};
 
 	// ---------------------------------------------------------------------------------------------
@@ -203,6 +213,7 @@ public:
 		using GlyphToCharMap = std::unordered_map<SdfText::Font::Glyph, SdfText::Font::Char>;
 		
 		struct GlyphMetrics {
+            float width;
 			vec2  advance;
 			vec2  minimum;
 			vec2  maximum;

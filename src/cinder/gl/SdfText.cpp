@@ -1143,8 +1143,8 @@ struct LineProcessor
 
 struct LineMeasure 
 {
-	LineMeasure( float maxWidth, const SdfText::Font::GlyphMetricsMap &cachedGlyphMetrics, const SdfText::Font::CharToGlyphMap& charToGlyphMap ) 
-		: mMaxWidth( maxWidth ), mCachedGlyphMetrics( cachedGlyphMetrics ), mCharToGlyphMap( charToGlyphMap ) {}
+	LineMeasure( float maxWidth, float tracking, const SdfText::Font::GlyphMetricsMap &cachedGlyphMetrics, const SdfText::Font::CharToGlyphMap& charToGlyphMap ) 
+		: mMaxWidth( maxWidth ), mTracking(tracking), mCachedGlyphMetrics( cachedGlyphMetrics ), mCharToGlyphMap( charToGlyphMap ) {}
 
 	bool operator()( const char *line, size_t len ) const {
 		if( mMaxWidth >= MAX_SIZE ) {
@@ -1164,6 +1164,7 @@ struct LineMeasure
 		std::u32string utf32Chars = ci::toUtf32( std::string( line, len ) );
 		float measuredWidth = 0;
 		vec2 pen = { 0, 0 };
+
 		for( const auto& ch : utf32Chars ) {
 			auto glyphIndexIt = mCharToGlyphMap.find( static_cast<uint32_t>( ch ) );
 			if( mCharToGlyphMap.end() == glyphIndexIt ) {
@@ -1186,9 +1187,10 @@ struct LineMeasure
 		return result;
 	}
 
-	float									mMaxWidth = 0;
-	const SdfText::Font::GlyphMetricsMap	&mCachedGlyphMetrics;
-	const SdfText::Font::CharToGlyphMap		&mCharToGlyphMap;
+	float mMaxWidth = 0;
+    float mTracking = 0;
+	const SdfText::Font::GlyphMetricsMap& mCachedGlyphMetrics;
+	const SdfText::Font::CharToGlyphMap& mCharToGlyphMap;
 };
 
 std::vector<std::string> SdfTextBox::calculateLineBreaks() const
@@ -1198,7 +1200,7 @@ std::vector<std::string> SdfTextBox::calculateLineBreaks() const
 
 	std::vector<std::string> result;
 	std::function<void(const char *,size_t)> lineFn = LineProcessor( &result );		
-	lineBreakUtf8( mText.c_str(), LineMeasure( ( mSize.x > 0 ) ? static_cast<float>( mSize.x ) : MAX_SIZE, glyphMetrics, charToGlyph ), lineFn );
+	lineBreakUtf8( mText.c_str(), LineMeasure( ( mSize.x > 0 ) ? static_cast<float>( mSize.x ) : MAX_SIZE, mTracking, glyphMetrics, charToGlyph ), lineFn );
 	return result;
 }
 
@@ -1356,6 +1358,8 @@ SdfText::Font::GlyphMeasuresList SdfTextBox::measureGlyphs( const SdfText::DrawO
 	}
 
 	mSize.y += 0.5f*leadingSpacing;
+
+
 
 	return result;
 }
@@ -1587,6 +1591,7 @@ SdfText::SdfText( const SdfText::Font &font, const Format &format, const std::st
 				FT_Load_Glyph( face, glyphIndex, FT_LOAD_DEFAULT );
 				FT_GlyphSlot slot = face->glyph;
 				SdfText::Font::GlyphMetrics glyphMetrics;
+				glyphMetrics.width = slot->metrics.width / 64.0f;
 				glyphMetrics.advance = vec2( slot->linearHoriAdvance, slot->linearVertAdvance ) / 65536.0f;
 				glyphMetrics.minimum = vec2( slot->metrics.horiBearingX, slot->metrics.vertBearingY - slot->metrics.height ) / 64.0f;
 				glyphMetrics.maximum = vec2( slot->metrics.horiBearingX + slot->metrics.width, slot->metrics.vertBearingY ) / 64.0f;
@@ -2317,12 +2322,35 @@ void SdfText::drawString( const std::string &str, const vec2 &baseline, const Dr
 //    drawGlyphs( glyphMeasures, fitRect, fitRect.getUpperLeft() + offset, options );
 //}
 
-ci::Rectf SdfText::drawString( const std::string &str, const Rectf &fitRect, const vec2 &offset, const DrawOptions &options )
-{
+ci::Rectf SdfText::drawString( const std::string &str, const Rectf &fitRect, const vec2 &offset, const DrawOptions &options ) {
 	SdfTextBox tbox = SdfTextBox( this ).text( str ).size( (int)fitRect.getWidth(), SdfTextBox::GROW).ligate( options.getLigate() ).tracking( options.getTracking() );
 	SdfText::Font::GlyphMeasuresList glyphMeasures = tbox.measureGlyphs( options );
-	drawGlyphs( glyphMeasures, fitRect.getUpperLeft() + offset, options );
-    return ci::Rectf(fitRect.getUpperLeft(), fitRect.getUpperLeft() + ci::vec2(tbox.getSize()));
+    /*
+	* fitRect now holds the box we* desire* the text to fit into
+	* and tbox holds the actual textbox
+	*/
+	ci::vec2 topLeft;
+	float vertAdjustment;
+	switch (options.getVerticalAlignment()) {
+        case VerticalAlignment::TOP:
+            drawGlyphs(glyphMeasures, fitRect.getUpperLeft() + offset, options);
+            return ci::Rectf(fitRect.getUpperLeft(), fitRect.getUpperLeft() + ci::vec2(tbox.getSize()));
+            break;
+        case VerticalAlignment::MIDDLE:
+            vertAdjustment = 0.5f * (fitRect.getHeight() -
+                                   tbox.getSize().y);
+			topLeft = fitRect.getUpperLeft() + ci::vec2(0, vertAdjustment);
+            drawGlyphs(glyphMeasures, topLeft + offset, options);
+            return ci::Rectf(topLeft, topLeft + ci::vec2(tbox.getSize()));
+            break;
+        case VerticalAlignment::BOTTOM:
+            topLeft = fitRect.getLowerLeft() -
+                               ci::vec2(0, tbox.getSize().y);
+            drawGlyphs(glyphMeasures, topLeft, options);
+            return ci::Rectf(topLeft, topLeft + ci::vec2(tbox.getSize()));
+            break;
+	}
+    return ci::Rectf();
 }
 
 std::vector<std::pair<uint8_t, std::vector<SdfText::CharPlacement>>> SdfText::placeChars( const SdfText::Font::GlyphMeasuresList &glyphMeasures, const vec2 &baselineIn, const DrawOptions &options )
