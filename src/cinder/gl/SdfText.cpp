@@ -1143,8 +1143,8 @@ struct LineProcessor
 
 struct LineMeasure 
 {
-	LineMeasure( float maxWidth, float tracking, const SdfText::Font::GlyphMetricsMap &cachedGlyphMetrics, const SdfText::Font::CharToGlyphMap& charToGlyphMap ) 
-		: mMaxWidth( maxWidth ), mTracking(tracking), mCachedGlyphMetrics( cachedGlyphMetrics ), mCharToGlyphMap( charToGlyphMap ) {}
+	LineMeasure(const ci::gl::SdfText::Font& font, float maxWidth, float tracking, const SdfText::Font::GlyphMetricsMap &cachedGlyphMetrics, const SdfText::Font::CharToGlyphMap& charToGlyphMap ) 
+		: mFont(font), mMaxWidth( maxWidth ), mTracking(tracking), mCachedGlyphMetrics( cachedGlyphMetrics ), mCharToGlyphMap( charToGlyphMap ) {}
 
 	bool operator()( const char *line, size_t len ) const {
 		if( mMaxWidth >= MAX_SIZE ) {
@@ -1177,7 +1177,7 @@ struct LineMeasure
 				continue;
 			}
 
-			const vec2& advance = glyphMetricIt->second.advance;		
+			const vec2& advance = glyphMetricIt->second.advance + (mTracking * mFont.getSize()) / 1000.0f; 
 			pen.x += advance.x;
 			pen.y += advance.y;
 			measuredWidth = pen.x;
@@ -1189,6 +1189,7 @@ struct LineMeasure
 
 	float mMaxWidth = 0;
     float mTracking = 0;
+	const ci::gl::SdfText::Font mFont;
 	const SdfText::Font::GlyphMetricsMap& mCachedGlyphMetrics;
 	const SdfText::Font::CharToGlyphMap& mCharToGlyphMap;
 };
@@ -1200,7 +1201,10 @@ std::vector<std::string> SdfTextBox::calculateLineBreaks() const
 
 	std::vector<std::string> result;
 	std::function<void(const char *,size_t)> lineFn = LineProcessor( &result );		
-	lineBreakUtf8( mText.c_str(), LineMeasure( ( mSize.x > 0 ) ? static_cast<float>( mSize.x ) : MAX_SIZE, mTracking, glyphMetrics, charToGlyph ), lineFn );
+	lineBreakUtf8(mText.c_str(),
+                      LineMeasure(mSdfText->getFont(), (mSize.x > 0) ? static_cast<float>(mSize.x) : MAX_SIZE,
+                                                       mTracking, glyphMetrics, charToGlyph),
+                      lineFn);
 	return result;
 }
 
@@ -1282,7 +1286,7 @@ SdfText::Font::GlyphMeasuresList SdfTextBox::measureGlyphs( const SdfText::DrawO
 				continue;
 			}
 
-			advance = glyphMetricIt->second.advance + ( mTracking * font.getSize() ) / 1000.0f; // See: https://graphicdesign.stackexchange.com/a/61079 
+			advance = glyphMetricIt->second.advance + ( mTracking * font.getSize() ) / 1000.0f; // See: https://graphicdesign.stackexchange.com/a/61079
 			adjust = advance - glyphMetricIt->second.maximum;
 
 			glyphCount++;
@@ -1292,7 +1296,7 @@ SdfText::Font::GlyphMeasuresList SdfTextBox::measureGlyphs( const SdfText::DrawO
 			}
 
 			float xPos = pen.x;
-                        result.push_back(std::make_pair((uint32_t)glyphIndex, vec2(xPos, mSize.y)));
+            result.push_back(std::make_pair((uint32_t)glyphIndex, vec2(xPos, mSize.y)));
 
 			pen += advance;
 		}

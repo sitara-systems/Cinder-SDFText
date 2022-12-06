@@ -297,7 +297,7 @@ void TypographyAnatomyApp::draw() {
 
     ci::Rectf fitRect = ci::Rectf(
         ci::vec2(baseline),
-        ci::vec2(baseline.x + 1.5*maxWidth, baseline.y + 2 * mLeading * currentFont->getFont().getSize()));
+        ci::vec2(baseline.x + maxWidth, baseline.y + 2 * mLeading * currentFont->getFont().getSize()));
 
     if (mDrawBoundingBoxes) {
         gl::color(0, 0.45f, 0.45f);

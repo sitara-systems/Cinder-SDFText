@@ -30,6 +30,8 @@ To get started quickly, start with the `Basic` example to get some text on the s
 
 To better understand exactly how various options affect type, it's highly recommended to check out the `TypographyAnatomy` sample. This will show you how various options affect the look and feel of the type.
 
+It's recommended that you read about how typography generally works at a low level; the FreeType has some [great tutorials](https://freetype.org/freetype2/docs/tutorial/step2.html)
+
 Some quirks that are useful to call out for anyone not familiar with the block:
 
 ### Leading
@@ -46,7 +48,7 @@ This block supports two styles of leading: full leading and half-leading. Half-l
 
 A `fitRect` is a rectangle that you would like the text to fit into. A `fitRect` is used with `SdfText::drawStringWrapped` and optionally with `SdfText::drawString`. When using a `fitRect`, the text will be placed _inside_ of the rectangle; when using a `baseline` the text will sit on _top_ of the baseline. These will (and should!) give you different placements of the text.
 
-A bounding box (given by `measureStringBoundsWrapped` or `measureStringBounds`) will give you the actual bounding box for the text. This will include any ascenders, descenders, ligatures, and adjustments to tracking and/or leading. This is the real, honest-to-god, bounding box of the text as rendered and has should _not_ be used as a measure of typographic parameters. This box will not give you accurate information about line height, leading, etc.!
+A bounding box (given by `measureStringBoundsWrapped` or `measureStringBounds`) will give you the actual bounding box for the text. This will include any ascenders, descenders, ligatures, and adjustments to tracking and/or leading. This is the real, honest-to-god, bounding box of the text as rendered and has should _not_ be used as a measure of typographic parameters. This box will not give you accurate information about line height, leading, etc.! The intended application is if you want to know the exact size of the rendered glyphs for collisions, rendering, etc.
 
 The `TypographyAnatomy` example provides a clear example of `fitRect` vs bounding box in the display options.
 
